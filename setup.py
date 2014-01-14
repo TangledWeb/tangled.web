@@ -5,7 +5,7 @@ setup(
     name='tangled.web',
     version='0.1.dev0',
     description='RESTful Web Framework',
-    long_description=open('README').read(),
+    long_description=open('README.rst').read(),
     packages=find_packages(),
     install_requires=(
         'tangled>=0.1.dev0',
