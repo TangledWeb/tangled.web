@@ -9,7 +9,7 @@ Links
 =====
 
 - `Project Home Page <http://tangledframework.org/>`_
-- `Source Code (GitHub) <http://github.com/TangledWeb>`_
+- `Source Code (GitHub) <http://github.com/TangledWeb/tangled.web>`_
 
 Contents
 ========
