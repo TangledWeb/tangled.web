@@ -262,6 +262,33 @@ class Application(Registry):
         """
         self.register(abcs.AHandler, handler, handler)
 
+    def add_helper(self, helper, name=None, static=False, package=None,
+                   replace=False):
+        """Add a "helper" function.
+
+        ``helper`` can be a string pointing to the helper or the helper
+        itself. If it's a string, ``helper`` and ``package`` will be
+        passed to :func:`load_object`.
+
+        Helper functions can be methods that take a ``Helpers`` instance
+        as their first args or they can be static methods. The latter is
+        useful for adding third party functions as helpers.
+
+        Helper functions can be accessed via ``request.helpers``. The
+        advantage of this is that helpers added as method have access to
+        the application and the current request.
+
+        """
+        helper = load_object(helper, package=package)
+        if name is None:
+            name = helper.__name__
+        if static:
+            helper = staticmethod(helper)
+        self.register('helper', helper, name, replace=replace)
+        if abcs.AHelpers not in self:
+            helpers_factory = self.get_setting('helpers_factory')
+            self.register(abcs.AHelpers, load_object(helpers_factory))
+
     def add_subscriber(self, event_type, func, priority=None, once=False,
                        **args):
         """Add a subscriber for the specified event type.

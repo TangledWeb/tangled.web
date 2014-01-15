@@ -8,7 +8,7 @@ from webob.exc import status_map, WSGIHTTPException
 
 from tangled.decorators import reify, cached_property
 
-from .abcs import AMountedResource, ARequest, AResponse
+from .abcs import AHelpers, AMountedResource, ARequest, AResponse
 
 
 log = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ STATUS_MAP = {
     'POST': 303,
     'PUT': 204,
 }
+
 
 
 class Request(ARequest, BaseRequest):
@@ -38,6 +39,12 @@ class Request(ARequest, BaseRequest):
 
     def get_setting(self, *args, **kwargs):
         return self.app.get_setting(*args, **kwargs)
+
+    @reify
+    def helpers(self):
+        helpers_factory = self.app.get_required(AHelpers)
+        helpers = self.app.get_all('helper', default={}, as_dict=True)
+        return type('Helpers', (helpers_factory,), helpers)(self.app, self)
 
     # Response related
 
