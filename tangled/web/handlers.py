@@ -51,8 +51,8 @@ def exc_handler(app, request, next_handler):
             error_resource = app.get_setting('error_resource')
             if error_resource:
                 resource = error_resource(app, request)
+                request.method = 'GET'
                 request.resource = resource
-                request.resource_method = resource.GET
                 request.response = response
                 del request.representation_info
                 try:
@@ -147,7 +147,8 @@ def notifier(app, request, next_handler):
 def resource_finder(app, request, next_handler):
     """Find resource for request.
 
-    Sets ``request.resource`` and ``request.resource_method``.
+    Sets ``request.resource`` and notifies :class:`ResourceFound`
+    subscribers.
 
     If a resource isn't found, a 404 response is immediatley returned.
     If a resource is found but doesn't respond to the request's method,
@@ -164,11 +165,9 @@ def resource_finder(app, request, next_handler):
         request.abort(404)
 
     resource = match.factory(app, request, match.name, match.urlvars)
-    method = getattr(resource, request.method, None)
-    if method is None:
+    if not hasattr(resource, request.method):
         request.abort(405)
     request.resource = resource
-    request.resource_method = method
     app.notify_subscribers(ResourceFound, app, request, resource)
     return next_handler(app, request)
 
@@ -211,7 +210,8 @@ def main(app, request, _):
     are set from the representation).
 
     """
-    data = request.resource_method()
+    method = getattr(request.resource, request.method)
+    data = method()
 
     if isinstance(data, Response):
         return data

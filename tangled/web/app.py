@@ -460,11 +460,7 @@ class Application(Registry):
 
         """
         resource_cls = resource.__class__
-        if isinstance(method, str):
-            resource_method = getattr(resource_cls, method)
-        else:
-            resource_method = method
-            method = resource_method.__name__
+        resource_method = getattr(resource_cls, method)
 
         cls_name = fully_qualified_name(resource_cls)
         meth_name = fully_qualified_name(resource_method)

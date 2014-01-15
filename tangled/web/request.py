@@ -110,12 +110,12 @@ class Request(ARequest, BaseRequest):
         """Get info for the resource associated with this request.
 
         .. note:: This can't be safely accessed until after the resource
-                  has been found and set for this request. ``resource``
-                  and ``resource_method`` both need to be set.
+                  has been found and set for this request. In particular,
+                  ``resource`` needs to be set.
 
         """
         return self.app.get_representation_info(
-            self.resource, self.resource_method, self.response_content_type)
+            self.resource, self.method, self.response_content_type)
 
     # URL generators
 
