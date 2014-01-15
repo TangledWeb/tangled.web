@@ -98,6 +98,7 @@ class TemplateMixin:
             settings=self.app.settings,
             request=self.request,
             response=self.request.response,
+            resource=self.request.resource,
         )
         context.update(self.data)
         context.update(extra)
