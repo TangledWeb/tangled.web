@@ -395,12 +395,12 @@ class Application(Registry):
 
     # Static directories
 
-    def mount_static_directory(self, prefix, directory):
+    def mount_static_directory(self, prefix, directory, index_page=None):
         if directory.startswith('http://') or directory.startswith('https://'):
             directory = directory
         else:
             directory = abs_path(directory)
-            directory = DirectoryApp(directory, index_page=None)
+            directory = DirectoryApp(directory, index_page=index_page)
         self.register('static_directory', directory, prefix)
 
     # Non-configuration methods
