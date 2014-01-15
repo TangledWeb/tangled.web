@@ -89,6 +89,7 @@ def static_files(app, request, next_handler):
         directory_app = app.get('static_directory', prefix, None)
         if directory_app:
             request.is_static = True
+            request.path_info_pop()
             return directory_app(request)
     return next_handler(app, request)
 
