@@ -118,6 +118,7 @@ def csrf_handler(app, request, next_handler):
                     _forbid(
                         'POST token mismatch: got {}; expected {}'
                         .format(post_token, expected_token))
+                del request.POST[KEY]
             elif HEADER in request.headers:
                 token = request.decrypt_csrf_token(
                     request.headers[HEADER])
