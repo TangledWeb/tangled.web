@@ -399,6 +399,7 @@ class Application(Registry):
         if directory.startswith('http://') or directory.startswith('https://'):
             directory = directory
         else:
+            prefix = tuple(prefix.strip('/').split('/'))
             directory = abs_path(directory)
             directory = DirectoryApp(directory, index_page=index_page)
         self.register('static_directory', directory, prefix)
