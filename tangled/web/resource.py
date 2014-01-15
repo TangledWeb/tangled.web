@@ -28,6 +28,10 @@ class Resource:
         urlvars = self.urlvars if urlvars is None else urlvars
         return self.request.resource_url(self, urlvars, **kwargs)
 
+    def path(self, urlvars=None, **kwargs):
+        urlvars = self.urlvars if urlvars is None else urlvars
+        return self.request.resource_path(self, urlvars, **kwargs)
+
     def NOT_ALLOWED(self):
         raise HTTPMethodNotAllowed()
 
