@@ -127,7 +127,7 @@ class MountedResource:
         path = self.path
         if not path.startswith('/'):
             path = '/' + path
-        regex = re.sub(self.identifier, r'(?P<\1>\w+)', path)
+        regex = re.sub(self.identifier, r'(?P<\1>[\w-]+)', path)
         regex = re.sub(self.identifier_with_re, r'(?P<\1>\2)', regex)
         regex = r'^{}$'.format(regex)
         regex = re.compile(regex)
