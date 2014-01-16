@@ -524,7 +524,7 @@ class Application(Registry):
 
     @staticmethod
     def log_exc(request, exc, logger=None):
-        message = '\n'.join(
+        message = ''.join(
             traceback.format_exception(exc.__class__, exc, exc.__traceback__))
         if logger is None:
             logger = logging.getLogger('exc')

@@ -321,6 +321,6 @@ class RequestFinishedException(Exception):
         for i, exc in enumerate(self.exceptions, 1):
             tb = traceback.format_exception(
                 exc.__class__, exc, exc.__traceback__)
-            tb = '\n'.join(tb)
+            tb = ''.join(tb)
             message.append('{}. {}'.format(i, tb))
         return '\n'.join(message)
