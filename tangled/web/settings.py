@@ -10,7 +10,6 @@ CONVERSION_MAP = {
     'debug': 'bool',
     'debug.pdb': 'bool',
     'tangled.app.csrf.enabled': 'bool',
-    'tangled.app.csrf.encrypt_tokens': 'bool',
     'tangled.app.error_resource': 'object',
     'tangled.app.handlers': 'list',
     'tangled.app.includes': 'list',
