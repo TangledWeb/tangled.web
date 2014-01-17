@@ -11,7 +11,7 @@ class config:
 
         class MyResource:
 
-            @config('text/html', template_name='my_resource.mako')
+            @config('text/html', template='my_resource.mako')
             def GET(self):
                 pass
 
