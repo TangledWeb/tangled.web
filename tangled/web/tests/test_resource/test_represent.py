@@ -2,33 +2,32 @@ import unittest
 
 import venusian
 
-from tangled.web.app import Application
-from tangled.web.decorators import represent
-from tangled.web.resource import Resource as BaseResource
+from tangled.web import Application, config
+from tangled.web import Resource as BaseResource
 
 
 class TestRepresent(unittest.TestCase):
 
     def setUp(self):
-        represent.callbacks = []
+        config.callbacks = []
         self.app = Application({
             'tangled.app.csrf.enabled': False,
         })
 
     def _scan(self, cls):
         scanner = venusian.Scanner(app=self.app)
-        for callback in represent.callbacks:
+        for callback in config.callbacks:
             callback(scanner, cls.__name__, cls)
 
     def test_no_args_raises_TypeError(self):
         with self.assertRaises(TypeError):
-            represent('*/*')(type('Resource', (), {}))
+            config('*/*')(type('Resource', (), {}))
 
     def test_no_defaults(self):
 
         class Resource(BaseResource):
 
-            @represent('text/html', status=303)
+            @config('text/html', status=303)
             def GET(self):
                 pass
 
@@ -43,7 +42,7 @@ class TestRepresent(unittest.TestCase):
 
     def test_defaults(self):
 
-        @represent('*/*', status=303)
+        @config('*/*', status=303)
         class Resource(BaseResource):
 
             def GET(self):
@@ -59,15 +58,15 @@ class TestRepresent(unittest.TestCase):
         self.assertEqual(info.representation_args, {})
 
     def test_override_defaults(self):
-        @represent(
+        @config(
             '*/*', type='no_content', status=301,
             response_attrs={'status': 204})
         class Resource(BaseResource):
 
-            @represent('*/*', status=302)
-            @represent(
+            @config('*/*', status=302)
+            @config(
                 'application/json', status=303, response_attrs={'x': 'x'})
-            @represent('text/html', type=None, response_attrs={})
+            @config('text/html', type=None, response_attrs={})
             def GET(self):
                 pass
 
@@ -96,10 +95,10 @@ class TestRepresent(unittest.TestCase):
                 pass
 
         with self.assertRaises(TypeError):
-            self._scan(represent('*/*', xxx=True)(Resource))
+            self._scan(config('*/*', xxx=True)(Resource))
 
         self.app.add_representation_info_field('*/*', 'xxx', False)
-        self._scan(represent('*/*', xxx=True)(Resource))
+        self._scan(config('*/*', xxx=True)(Resource))
 
         resource = Resource(None, None)
         info = self.app.get_representation_info(resource, 'GET', 'text/html')

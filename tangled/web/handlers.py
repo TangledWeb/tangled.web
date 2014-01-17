@@ -194,12 +194,12 @@ def main(app, request, _):
     processing.
 
     If the status of `request.response` has been set to 3xx (either via
-    @represent or in the body of the resource method), the response will
+    @config or in the body of the resource method), the response will
     will be returned as is without further processing.
 
     Otherwise, a representation will be generated based on the request's
     Accept header (unless a representation type has been set via
-    @represent, in which case that type will be used instead of doing
+    @config, in which case that type will be used instead of doing
     a best match guess).
 
     If the representation returns a response object as its content, that

@@ -64,10 +64,10 @@ class Request(ARequest, BaseRequest):
         """Create the default response object for this request.
 
         The response is initialized with attributes set via
-        ``@represent``: ``status``, ``location``, and
+        ``@config``: ``status``, ``location``, and
         ``response_attrs``.
 
-        If no status code was set via ``@represent``, we try our best
+        If no status code was set via ``@config``, we try our best
         to set it to something sane here based on content type and
         method.
 

@@ -448,7 +448,7 @@ class Application(Registry):
 
         This combines the default info from
         :meth:`get_default_representation_info with the info set via
-        ``@represent``.
+        ``@config``.
 
         Returns an info structure populated with class level defaults
         for */* and ``content_type`` plus method level info for */* and

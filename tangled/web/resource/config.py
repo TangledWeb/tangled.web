@@ -3,7 +3,7 @@ import venusian
 from tangled.util import NOT_SET, fully_qualified_name
 
 
-class represent:
+class config:
 
     """Decorator for configuring resources.
 
@@ -11,17 +11,17 @@ class represent:
 
         class MyResource:
 
-            @represent('text/html', template_name='my_resource.mako')
+            @config('text/html', template_name='my_resource.mako')
             def GET(self):
                 pass
 
     Example of defaults and overrides::
 
-        @represent('*/*', status=303, response_attrs={'location': '/'})
+        @config('*/*', status=303, response_attrs={'location': '/'})
         class MyResource:
 
-            @represent('*/*', status=302)
-            @represent('text/html', status=None, response_attrs={})
+            @config('*/*', status=302)
+            @config('text/html', status=None, response_attrs={})
             def GET(self):
                 pass
 
@@ -34,7 +34,7 @@ class represent:
         if 'redirect' in kwargs:
             kwargs['status'] = kwargs.pop('redirect')
         if not kwargs:
-            raise TypeError('@represent requires at least one keyword arg')
+            raise TypeError('@config requires at least one keyword arg')
         self.kwargs = kwargs
 
     def __call__(self, wrapped):
@@ -54,7 +54,7 @@ class represent:
 
     def _validate_args(self, app, wrapped):
         # This is here so the app won't start if any of the args passed
-        # to @represent are invalid. Otherwise, the invalid args
+        # to @config are invalid. Otherwise, the invalid args
         # wouldn't be detected until a request is made to a resource
         # that was decorated with invalid args.
         method = '*' if isinstance(wrapped, type) else wrapped.__name__
@@ -63,15 +63,15 @@ class represent:
         for k in self.kwargs:
             if not (k in field_names or k in info.representation_args):
                 raise TypeError(
-                    'Unknown @represent arg for {}: {}'
+                    'Unknown @config arg for {}: {}'
                     .format(self.content_type, k))
         for k in field_names:
             if getattr(info, k) is NOT_SET and k not in self.kwargs:
                 raise TypeError(
-                    'Missing required @represent arg for {}: {}'
+                    'Missing required @config arg for {}: {}'
                     .format(self.content_type, k))
         for k, v in info.representation_args.items():
             if v is NOT_SET and k not in self.kwargs:
                 raise TypeError(
-                    'Missing required @represent arg for {}: {}'
+                    'Missing required @config arg for {}: {}'
                     .format(self.content_type, k))
