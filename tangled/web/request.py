@@ -15,14 +15,25 @@ log = logging.getLogger(__name__)
 
 
 STATUS_MAP = {
-    'DELETE': 204,
-    'GET': 200,
-    'HEAD': 204,
-    'OPTIONS': 200,
-    'POST': 303,
-    'PUT': 204,
+    'text/html': {
+        'DELETE': 303,
+        'GET': 200,
+        'HEAD': 204,
+        'OPTIONS': 200,
+        'POST': 303,
+        'PUT': 303,
+    },
+    'application/json': {
+        'DELETE': 204,   # No content
+        'GET': 200,
+        'HEAD': 204,
+        'OPTIONS': 200,
+        'POST': 201,     # Created
+        'PUT': 204,
+    }
 }
 
+DEFAULT_REDIRECT_STATUS = 303
 
 
 class Request(ARequest, BaseRequest):
@@ -56,6 +67,20 @@ class Request(ARequest, BaseRequest):
         ``@represent``: ``status``, ``location``, and
         ``response_attrs``.
 
+        If no status code was set via ``@represent``, we try our best
+        to set it to something sane here based on content type and
+        method.
+
+        If ``location`` is set but ``status`` isn't, the response's
+        status is set to :glob:`DEFAULT_REDIRECT_STATUS`.
+
+        The location can also be set to one of the special values
+        'REFERER' or 'CAME_FROM'. The former redirects back to the
+        refering page. The latter redirects to whatever is set in the
+        ``came_from`` request parameter.
+
+        TODO: Check origin of referer and came from.
+
         .. note:: See note in :meth:`representation_info`.
 
         """
@@ -65,7 +90,11 @@ class Request(ARequest, BaseRequest):
         if info.status:
             args['status'] = info.status
         else:
-            args['status'] = STATUS_MAP[self.method]
+            if info.content_type in STATUS_MAP:
+                content_type = info.content_type
+            else:
+                content_type = 'text/html'
+            args['status'] = STATUS_MAP[content_type][self.method]
         if info.location:
             location = info.location
             if location == 'REFERER':
@@ -82,6 +111,8 @@ class Request(ARequest, BaseRequest):
                 else:
                     location = self.make_url(location)
             args['location'] = location
+            if 'status' not in args:
+                args['status'] = DEFAULT_REDIRECT_STATUS
         return self.app.get(AResponse)(**args)
 
     def update_response(self, **kwargs):
