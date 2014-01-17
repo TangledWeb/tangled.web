@@ -53,8 +53,6 @@ class Application(Registry):
     """
 
     def __init__(self, settings, parse=False):
-        super().__init__()  # Initialize as registry
-
         if parse:
             settings = self.parse_settings(settings)
         default_settings = self.parse_settings_file(
