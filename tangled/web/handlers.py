@@ -84,7 +84,7 @@ def request_finished_handler(app, request, _):
 
 
 def static_files(app, request, next_handler):
-    if app.has_key('static_directory'):
+    if app.has_any('static_directory'):
         segments = tuple(request.path_info.lstrip('/').split('/'))
         prefix = ()
         for segment in segments:

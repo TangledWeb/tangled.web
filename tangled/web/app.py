@@ -187,7 +187,7 @@ class Application(Registry):
         settings = self.get_settings(prefix='tangled.app.handler.')
         # System handler chain
         handlers = [settings['exc']]
-        if self.has_key('static_directory'):
+        if self.has_any('static_directory'):
             handlers.append(settings['static_files'])
         handlers.append(settings['tweaker'])
         handlers.append(settings['notifier'])
