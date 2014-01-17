@@ -9,6 +9,7 @@ setup(
     packages=find_packages(),
     install_requires=(
         'tangled>=0.1.dev0',
+        'MarkupSafe>=0.18',
         'venusian>=1.0a8',
         'WebOb>=1.3.1',
     ),

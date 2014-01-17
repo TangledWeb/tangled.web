@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
+from markupsafe import Markup
 from webob.exc import HTTPForbidden
 
 from tangled.util import constant_time_compare, random_bytes, random_string
@@ -75,8 +76,8 @@ def expire_csrf_token(request):
 @property
 def csrf_tag(request):
     tag = '<input type="hidden" name="{name}" value="{value}" />'
-    tag = tag.format(name=KEY, value=request.encrypted_csrf_token)
-    return tag
+    tag = tag.format(name=KEY, value=request.masked_csrf_token)
+    return Markup(tag)
 
 
 def csrf_handler(app, request, next_handler):
