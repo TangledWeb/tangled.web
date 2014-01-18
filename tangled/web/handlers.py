@@ -54,7 +54,7 @@ def exc_handler(app, request, next_handler):
                 request.method = 'GET'
                 request.resource = resource
                 request.response = response
-                del request.representation_info
+                del request.resource_config
                 try:
                     return main(app, request, None)
                 except WSGIHTTPException as exc:
@@ -221,7 +221,7 @@ def main(app, request, _):
     if 300 <= response.status_code < 400:
         return response
 
-    info = request.representation_info
+    info = request.resource_config
 
     if info.type:
         type_ = app.get('representation_lookup', info.type)

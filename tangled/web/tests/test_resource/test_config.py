@@ -4,9 +4,10 @@ import venusian
 
 from tangled.web import Application, config
 from tangled.web import Resource as BaseResource
+from tangled.web.resource.config import Config
 
 
-class TestRepresent(unittest.TestCase):
+class TestConfig(unittest.TestCase):
 
     def setUp(self):
         config.callbacks = []
@@ -34,7 +35,7 @@ class TestRepresent(unittest.TestCase):
         self._scan(Resource)
 
         resource = Resource(None, None)
-        info = self.app.get_representation_info(resource, 'GET', 'text/html')
+        info = Config.for_resource(self.app, resource, 'GET', 'text/html')
         self.assertIsNone(info.type)
         self.assertEqual(info.status, 303)
         self.assertEqual(info.response_attrs, {})
@@ -51,7 +52,7 @@ class TestRepresent(unittest.TestCase):
         self._scan(Resource)
 
         resource = Resource(None, None)
-        info = self.app.get_representation_info(resource, 'GET', 'text/html')
+        info = Config.for_resource(self.app, resource, 'GET', 'text/html')
         self.assertIsNone(info.type)
         self.assertEqual(info.status, 303)
         self.assertEqual(info.response_attrs, {})
@@ -73,15 +74,15 @@ class TestRepresent(unittest.TestCase):
         self._scan(Resource)
 
         resource = Resource(None, None)
-        info = self.app.get_representation_info(resource, 'GET', 'text/html')
+        info = Config.for_resource(self.app, resource, 'GET', 'text/html')
         self.assertIsNone(info.type)
         self.assertEqual(info.status, 302)
         self.assertEqual(info.response_attrs, {})
         self.assertEqual(info.representation_args, {})
 
         resource = Resource(None, None)
-        info = self.app.get_representation_info(
-            resource, 'GET', 'application/json')
+        info = Config.for_resource(
+            self.app, resource, 'GET', 'application/json')
         self.assertEqual(info.type, 'no_content')
         self.assertEqual(info.status, 303)
         self.assertEqual(info.response_attrs, {'x': 'x'})
@@ -97,10 +98,10 @@ class TestRepresent(unittest.TestCase):
         with self.assertRaises(TypeError):
             self._scan(config('*/*', xxx=True)(Resource))
 
-        self.app.add_representation_info_field('*/*', 'xxx', False)
+        self.app.add_config_field('*/*', 'xxx', False)
         self._scan(config('*/*', xxx=True)(Resource))
 
         resource = Resource(None, None)
-        info = self.app.get_representation_info(resource, 'GET', 'text/html')
+        info = Config.for_resource(self.app, resource, 'GET', 'text/html')
         self.assertTrue(hasattr(info, 'xxx'))
         self.assertTrue(info.xxx)

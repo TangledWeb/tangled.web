@@ -21,7 +21,7 @@ SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS', 'TRACE')
 
 
 def include(app):
-    app.add_representation_info_field('*/*', 'csrf_exempt', False)
+    app.add_config_field('*/*', 'csrf_exempt', False)
     app.add_request_attribute(csrf_token)
     app.add_request_attribute(masked_csrf_token)
     app.add_request_attribute(unmask_csrf_token)
@@ -82,7 +82,7 @@ def csrf_tag(request):
 
 def csrf_handler(app, request, next_handler):
     if request.method not in SAFE_METHODS:
-        if request.representation_info.csrf_exempt:
+        if request.resource_config.csrf_exempt:
             log.debug('CSRF: exempt: {}'.format(request.url))
         else:
             if request.scheme == 'https':

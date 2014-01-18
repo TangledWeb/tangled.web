@@ -3,7 +3,7 @@ import sys
 
 from tangled.abcs import ACommand
 from tangled.util import load_object
-from tangled.web.resource import Resource
+from tangled.web import Resource
 
 from .mixins import AppMixin
 

@@ -1,9 +1,6 @@
-import collections
 import configparser
-import copy
 import logging
 import logging.config
-import os
 import pdb
 import traceback
 
@@ -19,21 +16,30 @@ from tangled.registry import ARegistry, process_registry
 from tangled.util import (
     NOT_SET,
     abs_path,
-    fully_qualified_name,
     get_items_with_key_prefix,
     load_object,
 )
 
 from . import abcs, representations
 from .events import Subscriber, ApplicationCreated
-from .exc import ConfigurationError, DebugHTTPInternalServerError
+from .exc import DebugHTTPInternalServerError
 from .handlers import HandlerWrapper
 from .representations import Representation
-from .resource import MountedResource
+from .resource.config import (
+    ConfigArg,
+    Field as ConfigField,
+    RepresentationArg,
+)
+from .resource.mounted import MountedResource
 from .settings import parse_settings, parse_settings_file
 
 
 log = logging.getLogger(__name__)
+
+
+# TODO: Move this
+ALL_HTTP_METHODS = (
+    'CONNECT', 'DELETE', 'GET', 'HEAD', 'POST', 'PUT', 'OPTIONS', 'TRACE')
 
 
 Registry = process_registry[ARegistry]
@@ -70,10 +76,10 @@ class Application(Registry):
             if is_representation_type:
                 self.register_content_type(obj.content_type, obj)
 
-        self.add_representation_info_field('*/*', 'type', None)
-        self.add_representation_info_field('*/*', 'status', None)
-        self.add_representation_info_field('*/*', 'location', None)
-        self.add_representation_info_field('*/*', 'response_attrs', {})
+        self.add_config_field('*/*', 'type', None)
+        self.add_config_field('*/*', 'status', None)
+        self.add_config_field('*/*', 'location', None)
+        self.add_config_field('*/*', 'response_attrs', dict)
 
         # Handlers added from includes have precedence over handlers
         # listed in settings.
@@ -301,35 +307,78 @@ class Application(Registry):
         subscriber = Subscriber(event_type, func, priority, once, args)
         self.register(event_type, subscriber, subscriber)
 
-    def add_representation_info_field(self, content_type, name, *args,
-                                      **kwargs):
+    def add_config_field(self, content_type, name, *args, **kwargs):
+        """Add a config field that can be passed via ``@config``.
+
+        This allows extensions to add additional keyword args for
+        ``@config``. These args will be accessible as attributes of
+        the :class:`.resource.config.Config` object returned by
+        ``request.resource_config``.
+
+        These fields can serve any purpose. For example, a
+        ``permission`` field could be added, which would be accessible
+        as ``request.resource_config.permission``. This could be checked
+        in an auth handler to verify the user has the specified
+        permission.
+
+        See :meth:`_add_config_arg` for more detail.
+
+        """
         if name == 'representation_args':
-            raise ValueError('{} is a reserved name'.format(name))
-        key = 'representation_info_field'
-        self._add_representation_meta(key, content_type, name, *args, **kwargs)
+            raise ValueError('{} is a reserved Config field name'.format(name))
+        self._add_config_arg(ConfigField, content_type, name, *args, **kwargs)
 
     def add_representation_arg(self, *args, **kwargs):
-        key = 'representation_arg'
-        self._add_representation_meta(key, *args, **kwargs)
+        """Add a representation arg that can be specified via @config.
 
-    def _add_representation_meta(self, key, content_type, name,
-                                 default=NOT_SET, required=False,
-                                 methods='*'):
-        if required:
-            if default is not NOT_SET:
-                raise ValueError("can't set default for required arg")
+        This allows extensions to add additional keyword args for
+        ``@config``. These args will be passed as keyword args to the
+        representation type that is used for the request.
 
+        These args are accessible via the ``representation_args`` dict
+        of the :class:`.resource.config.Config` object returned by
+        ``request.resource_config`` (but generally would not be accessed
+        directly).
+
+        See :meth:`_add_config_arg` for more detail.
+
+        """
+        self._add_config_arg(RepresentationArg, *args, **kwargs)
+
+    def _add_config_arg(self, type_, content_type, name, default=None,
+                        required=False, methods=ALL_HTTP_METHODS):
+        """Add an arg that can be passed to ``@config``.
+
+        .. note:: This shouldn't be called directly. It's used by both
+            :meth:`add_config_field` and :meth:`add_representation_arg`
+            because they work in exactly the same way.
+
+        ``name`` is the name of the arg as it would be passed to
+        ``@config`` as a keyword arg.
+
+        If a ``default`` is specified, it can be a callable or any other
+        type of object. If it's a callable, it will be used as a factory
+        for generating the default. If it's any other type of object, it
+        will be used as is.
+
+        If the arg is ``required``, then it *must* be passed via
+        ``@config``.
+
+        A list of ``methods`` can be passed to constrain which HTTP
+        methods the arg can be used on. By default, all methods are
+        allowed.
+
+        """
+        if methods == '*':
+            methods = ALL_HTTP_METHODS
         methods = as_tuple(methods, sep=',')
-
+        arg = type_(methods, content_type, name, default, required)
         for method in methods:
-            _key = [key, (method, content_type)]
-            if _key not in self:
-                self[_key] = {}
-            if name in self[_key]:
-                raise ConfigurationError(
-                    '{} {} already added for {} {}'
-                    .format(key, name, method, content_type))
-            self[_key][name] = default
+            differentiator = (method, content_type)
+            if not self.contains(type_, differentiator):
+                self.register(type_, Registry(), differentiator)
+            registry = self.get(type_, differentiator)
+            registry.register(type_, arg, name)
 
     def mount_resource(self, *args, **kwargs):
         """Mount a resource at the specified path."""
@@ -337,8 +386,7 @@ class Application(Registry):
         self.register(
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
 
-    def register_content_type(self, content_type, representation_type,
-                              replace=False):
+    def register_content_type(self, content_type, representation_type, replace=False):
         """Register a content type.
 
         This does a few things. First, it registers the ``content_type``
@@ -414,87 +462,6 @@ class Application(Registry):
                 subscriber.func(event, **subscriber.args)
                 if subscriber.once:
                     self.remove(event_type, subscriber)
-
-    def get_default_representation_info(self, method, content_type):
-        """Get default representation info.
-
-        This is the default info that is set by calls to
-        :meth:`add_representation_arg` and
-        :meth:`add_representation_info_field`.
-
-        """
-        def _copy(key):
-            dict_ = {}
-            dict_.update(self.get(key, ('*', '*/*'), {}))
-            dict_.update(self.get(key, ('*', content_type), {}))
-            if method != '*':
-                dict_.update(self.get(key, (method, '*/*'), {}))
-                dict_.update(self.get(key, (method, content_type), {}))
-            for k, v in dict_.items():
-                dict_[k] = copy.copy(v)
-            return dict_
-
-        fields = _copy('representation_info_field')
-        fields['representation_args'] = _copy('representation_arg')
-
-        info_type = collections.namedtuple('RepresentationInfo', fields)
-        info = info_type(**fields)
-        return info
-
-    def get_representation_info(self, resource, method, content_type):
-        """Get repr. info for resource, method, and content type.
-
-        This combines the default info from
-        :meth:`get_default_representation_info with the info set via
-        ``@config``.
-
-        Returns an info structure populated with class level defaults
-        for */* and ``content_type`` plus method level info for */* and
-        ``content_type``.
-
-        Typically, this wouldn't be used directly; usually
-        :meth:`Request.representation_info` would be used to get the
-        info for the resource associated with the current request.
-
-        """
-        resource_cls = resource.__class__
-        resource_method = getattr(resource_cls, method)
-
-        cls_name = fully_qualified_name(resource_cls)
-        meth_name = fully_qualified_name(resource_method)
-
-        default_info = self.get_default_representation_info(
-            method, content_type)
-
-        field_names = set(default_info._fields)
-
-        fields = {}
-        for k in field_names:
-            v = getattr(default_info, k)
-            if v is not NOT_SET:
-                fields[k] = v
-
-        fields['representation_args'] = args = {}
-        default_args = default_info.representation_args
-        if default_args:
-            for k, v in default_args.items():
-                if v is not NOT_SET:
-                    args[k] = v
-
-        for data in (data for data in (
-            self.get('representation_info', (cls_name, '*/*')),
-            self.get('representation_info', (cls_name, content_type)),
-            self.get('representation_info', (meth_name, '*/*')),
-            self.get('representation_info', (meth_name, content_type)),
-        ) if data):
-            for name, value in data.items():
-                if name in field_names:
-                    fields[name] = value
-                elif name in default_args:
-                    args[name] = value
-
-        info = default_info.__class__(**fields)
-        return info
 
     # Request
 

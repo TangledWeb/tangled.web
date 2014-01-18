@@ -9,6 +9,7 @@ from webob.exc import status_map, WSGIHTTPException
 from tangled.decorators import reify, cached_property
 
 from .abcs import AHelpers, AMountedResource, ARequest, AResponse
+from .resource.config import Config
 
 
 log = logging.getLogger(__name__)
@@ -81,10 +82,10 @@ class Request(ARequest, BaseRequest):
 
         TODO: Check origin of referer and came from.
 
-        .. note:: See note in :meth:`representation_info`.
+        .. note:: See note in :meth:`resource_config`.
 
         """
-        info = self.representation_info
+        info = self.resource_config
         args = {}
         args.update(info.response_attrs)
         if info.status:
@@ -137,7 +138,7 @@ class Request(ARequest, BaseRequest):
         return content_type
 
     @cached_property
-    def representation_info(self):
+    def resource_config(self):
         """Get info for the resource associated with this request.
 
         .. note:: This can't be safely accessed until after the resource
@@ -145,8 +146,8 @@ class Request(ARequest, BaseRequest):
                   ``resource`` needs to be set.
 
         """
-        return self.app.get_representation_info(
-            self.resource, self.method, self.response_content_type)
+        return Config.for_resource(
+            self.app, self.resource, self.method, self.response_content_type)
 
     # URL generators
 
