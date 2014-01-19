@@ -21,8 +21,8 @@ Contents
    quick-start
    installation
    contributing
-   main/index
-   api/index
+   app-api/index
+   extension-api/index
 
 
 Indices and tables

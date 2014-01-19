@@ -41,7 +41,8 @@ class Request(ARequest, BaseRequest):
 
     """Default request factory.
 
-    Every request has a reference to its application context.
+    Every request has a reference to its application context (i.e.,
+    ``request.app``).
 
     """
 
@@ -50,10 +51,23 @@ class Request(ARequest, BaseRequest):
         self.app = app
 
     def get_setting(self, *args, **kwargs):
+        """Get an app setting.
+
+        Simply delegates to
+        :meth:`tangled.web.app.Application.get_setting`.
+
+        """
         return self.app.get_setting(*args, **kwargs)
 
     @reify
     def helpers(self):
+        """Get helpers for this request.
+
+        Returns a ``Helpers`` instance; all the helpers added via
+        :meth:`tangled.web.app.Application.add_helper` will be
+        accessible as methods of this instance.
+
+        """
         helpers_factory = self.app.get_required(AHelpers)
         helpers = self.app.get_all('helper', default={}, as_dict=True)
         return type('Helpers', (helpers_factory,), helpers)(self.app, self)
@@ -73,7 +87,7 @@ class Request(ARequest, BaseRequest):
         method.
 
         If ``location`` is set but ``status`` isn't, the response's
-        status is set to :glob:`DEFAULT_REDIRECT_STATUS`.
+        status is set to :const:`DEFAULT_REDIRECT_STATUS`.
 
         The location can also be set to one of the special values
         'REFERER' or 'CAME_FROM'. The former redirects back to the
@@ -142,8 +156,7 @@ class Request(ARequest, BaseRequest):
         """Get info for the resource associated with this request.
 
         .. note:: This can't be safely accessed until after the resource
-                  has been found and set for this request. In particular,
-                  ``resource`` needs to be set.
+                  has been found and set for this request.
 
         """
         return Config.for_resource(
@@ -245,6 +258,7 @@ class Request(ARequest, BaseRequest):
         """
         prefix, *rel_path = path.lstrip('/').split('/')
         try:
+            # TODO: Doesn't work for multi-segment prefixes
             directory = self.app.get('static_directory', prefix)
         except KeyError:
             raise ValueError(
@@ -325,7 +339,7 @@ class Request(ARequest, BaseRequest):
         """Abort the request by raising a WSGIHTTPException.
 
         This is a convenience so resource modules don't need to import
-        exceptions from webob.exc.
+        exceptions from :mod:`webob.exc`.
 
         """
         response_type = status_map[status_code]

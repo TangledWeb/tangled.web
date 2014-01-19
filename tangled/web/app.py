@@ -25,11 +25,7 @@ from .events import Subscriber, ApplicationCreated
 from .exc import DebugHTTPInternalServerError
 from .handlers import HandlerWrapper
 from .representations import Representation
-from .resource.config import (
-    ConfigArg,
-    Field as ConfigField,
-    RepresentationArg,
-)
+from .resource.config import Field as ConfigField, RepresentationArg
 from .resource.mounted import MountedResource
 from .settings import parse_settings, parse_settings_file
 
@@ -50,11 +46,20 @@ class Application(Registry):
     """Application container.
 
     The application container handles configuration and provides the
-    WSGI interface.
+    WSGI interface. It is passed to components such as handlers,
+    requests, and resources so they can inspect settings, retrieve
+    items from the registry, etc...
 
-    The application instance also acts as a registry. This provides
+    Speaking of which, the application instance acts as a registry (it's
+    a subclass of :class:`tangled.registry.Registry`). This provides
     a means for extensions and application code to set application level
     globals.
+
+    If settings are loaded from a config file and that config file (or
+    one of the config files it extends) contains logging config sections
+    (``formatters``, ``handlers``, ``loggers``), that logging
+    configuration will automatically be loaded via
+    ``logging.config.fileConfig``.
 
     """
 
@@ -113,6 +118,9 @@ class Application(Registry):
     def on_created(self, func, priority=None, once=True, **args):
         """Add an :class:`ApplicationCreated` subscriber.
 
+        Sets ``once`` to ``True`` by default since
+        ``ApplicationCreated`` is only emitted once per application.
+
         This can be used as a decorator in the simple case where no
         args other than ``func`` need to be passed along to
         :meth:`add_subscriber`.
@@ -143,6 +151,7 @@ class Application(Registry):
 
     @reify
     def debug(self):
+        """Wraps ``self.settings['debug'] merely for convenience."""
         return self.settings['debug']
 
     parse_settings = staticmethod(parse_settings)
@@ -243,6 +252,7 @@ class Application(Registry):
         return obj(self)
 
     def scan(self, where):
+        """Scan the indicated package or module."""
         where = load_object(where, level=3)
         scanner = venusian.Scanner(app=self)
         scanner.scan(where, categories=('tangled',))
@@ -442,6 +452,25 @@ class Application(Registry):
     # Static directories
 
     def mount_static_directory(self, prefix, directory, index_page=None):
+        """Mount a local or remote static directory.
+
+        ``prefix`` is an alias referring to ``directory``.
+
+        If ``directory`` is just a path, it should be a local directory.
+        Requests to ``/{prefix}/{path}`` will look in this directory for
+        the file indicated by ``path``.
+
+        If ``directory`` refers to a remote location (i.e., it starts
+        with ``http://`` or ``https://``), URLs generated via
+        ``reqeust.static_url`` and ``request.static_path`` will point
+        to the remote directory.
+
+        .. note:: It's best to always use
+                  :meth:`tangled.web.request.Request.static_url`
+                  :meth:`tangled.web.request.Request.static_path`
+                  to generate static URLs.
+
+        """
         if directory.startswith('http://') or directory.startswith('https://'):
             directory = directory
         else:

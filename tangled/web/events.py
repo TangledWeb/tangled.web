@@ -1,7 +1,106 @@
+"""Events are registered in the context of an application via
+:meth:`tangled.web.app.Application.add_subscriber`.
+
+Subscribers typically have the signature ``subscriber(event)``. If subscriber
+keyword args were passed to ``add_subscriber``, then the signature for the
+subscriber would be ``subscriber(event, **kwargs)``.
+
+Every event object will have an ``app`` attribute. Other attributes are
+event dependent.
+
+"""
 import sys
 
 
+class ApplicationCreated:
+
+    """Emitted when an application is fully configured.
+
+    These events can be registered in the usual way by calling
+    :meth:`tangled.web.app.Application.add_subscriber`. There's also
+    a convenience method for this:
+    :meth:`tangled.web.app.Application.on_created`.
+
+    Attributes: ``app``.
+
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+
+class NewRequest:
+
+    """Emitted when an application receives a new request.
+
+    This is *not* emitted for static file requests.
+
+    Attributes: ``app``, ``request``.
+
+    """
+
+    def __init__(self, app, request):
+        self.app = app
+        self.request = request
+
+
+class ResourceFound:
+
+    """Emitted when the resource is found for a request.
+
+    Attributes: ``app``, ``request``, ``resource``.
+
+    """
+
+    def __init__(self, app, request, resource):
+        self.app = app
+        self.request = request
+        self.resource = resource
+
+
+class NewResponse:
+
+    """Emitted when the response for a request is created.
+
+    This is *not* emitted for static file requests.
+
+    If there's in exception during request handling, this will *not* be
+    emitted.
+
+    Attributes: ``app``, ``request``, ``response``.
+
+    """
+
+    def __init__(self, app, request, response):
+        self.app = app
+        self.request = request
+        self.response = response
+
+
+class TemplateContextCreated:
+
+    """Emitted when the context for a template is created.
+
+    The template ``context`` is whatever data will passed to the
+    template. E.g., for Mako, it's a dict.
+
+    This is emitted just before the template is rendered. Its purpose
+    is to allow additional data to be injected into the template
+    context.
+
+    Attributes: ``app``, ``request``, ``context``
+
+    """
+
+    def __init__(self, app, request, context):
+        self.app = app
+        self.request = request
+        self.context = context
+
+
 class Subscriber:
+
+    # Internal; stores metadata along with subscriber function
 
     def __init__(self, event_type, func, priority=None, once=False, args=None):
         self.event_type = event_type
@@ -13,40 +112,3 @@ class Subscriber:
     @staticmethod
     def sorter(subscriber):
         return subscriber.priority
-
-
-class ApplicationCreated:
-
-    def __init__(self, app):
-        self.app = app
-
-
-class NewRequest:
-
-    def __init__(self, app, request):
-        self.app = app
-        self.request = request
-
-
-class ResourceFound:
-
-    def __init__(self, app, request, resource):
-        self.app = app
-        self.request = request
-        self.resource = resource
-
-
-class NewResponse:
-
-    def __init__(self, app, request, response):
-        self.app = app
-        self.request = request
-        self.response = response
-
-
-class TemplateContextCreated:
-
-    def __init__(self, app, request, context):
-        self.app = app
-        self.request = request
-        self.context = context

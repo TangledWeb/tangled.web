@@ -1,3 +1,28 @@
+"""System handlers.
+
+Requests are processed through a chain of handlers. This module contains
+the "system" handlers. These are handlers that always run in a specific
+order.
+
+Most of the system handlers *always* run. They can't be turned off, but
+you can swap in different implementations via settings. Take a look at
+:file:`tangled/web/defaults.ini` to see how you would do this.
+
+Some handlers are only enabled when certain settings are enabled or when
+certain configuration takes place. For example, to enable CSRF
+protection, the ``tangled.app.csrf.enabled`` setting needs to be set to
+``True``. Another example: the static files handlers is only enabled
+when at least one static directory has been mounted.
+
+If an auth handler is enabled, it will run directly before any (other)
+handlers added by the application developer.
+
+All added handlers are called in the order they were added. The last
+handler to run is always the :func:`main` handler; it calls into
+application code (i.e., it calls a resource method to get data or
+a response).
+
+"""
 import logging
 import pdb
 import time
@@ -13,21 +38,6 @@ from .response import Response
 
 
 log = logging.getLogger(__name__)
-
-
-class HandlerWrapper:
-
-    """An internal class used for wrapping handler callables."""
-
-    def __init__(self, callable_, next_handler):
-        self.callable_ = callable_
-        self.next = next_handler
-
-    def __call__(self, app, request):
-        response = self.callable_(app, request, self.next)
-        if response is None:
-            raise ValueError('Handler returned None')
-        return response
 
 
 def exc_handler(app, request, next_handler):
@@ -239,3 +249,18 @@ def main(app, request, _):
     response.charset = representation.encoding
     response.text = representation.content
     return response
+
+
+class HandlerWrapper:
+
+    # An internal class used for wrapping handler callables.
+
+    def __init__(self, callable_, next_handler):
+        self.callable_ = callable_
+        self.next = next_handler
+
+    def __call__(self, app, request):
+        response = self.callable_(app, request, self.next)
+        if response is None:
+            raise ValueError('Handler returned None')
+        return response

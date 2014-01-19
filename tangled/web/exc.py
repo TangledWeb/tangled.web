@@ -6,7 +6,7 @@ from webob.exc import HTTPInternalServerError
 
 class ConfigurationError(Exception):
 
-    pass
+    """Exception used to indicate a configuration error."""
 
 
 class DebugHTTPInternalServerError(HTTPInternalServerError):
