@@ -479,6 +479,38 @@ class Application(Registry):
             directory = DirectoryApp(directory, index_page=index_page)
         self.register('static_directory', directory, prefix)
 
+    def _find_static_directory(self, path):
+        """Find static directory for ``path``.
+
+        This attempts to find a registered static directory
+        corresponding to ``path``. If there is such a directory, the
+        prefix and the remaining segments are both returned as a tuple
+        of segments; if there isn't, ``(None, None)`` is returned.
+
+        E.g., for the path /static/images/icon.png, the following
+        tuple of tuples will be returned (assuming a static directory
+        was mounted with the prefix 'static')::
+
+            (('static'), ('images', 'icon.png'))
+
+        The prefix tuple can be used to find the registered static
+        directory::
+
+            app.get('static_directory', prefix)
+
+        The prefix and remaining segments can be used to generate
+        URLs.
+
+        """
+        if self.has_any('static_directory'):
+            prefix = ()
+            segments = tuple(path.lstrip('/').split('/'))
+            for segment in segments:
+                prefix += (segment,)
+                if self.contains('static_directory', prefix):
+                    return prefix, segments[len(prefix):]
+        return None, None
+
     # Non-configuration methods
 
     def notify_subscribers(self, event_type, *event_args, **event_kwargs):

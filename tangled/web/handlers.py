@@ -94,17 +94,11 @@ def request_finished_handler(app, request, _):
 
 
 def static_files(app, request, next_handler):
-    if app.has_any('static_directory'):
-        segments = tuple(request.path_info.lstrip('/').split('/'))
-        prefix = ()
-        for segment in segments:
-            prefix += (segment,)
-            directory_app = app.get('static_directory', prefix, None)
-            if directory_app:
-                request.is_static = True
-                for _ in prefix:
-                    request.path_info_pop()
-                return directory_app(request)
+    prefix, rel_path = app._find_static_directory(request.path_info)
+    if prefix is not None:
+        request.is_static = True
+        directory_app = app.get('static_directory', prefix)
+        return directory_app(app.make_blank_request('/'.join(rel_path)))
     return next_handler(app, request)
 
 

@@ -251,18 +251,12 @@ class Request(ARequest, BaseRequest):
         '/static/images/logo.png'. SCRIPT_NAME will be prepended by
         :meth:`make_url`.
 
-        The first segment in the path ('static' in the example above)
-        will be matched against static directories registered via
-        :meth:`.app.Application:mount_static_directory`.
-
         """
-        prefix, *rel_path = path.lstrip('/').split('/')
-        try:
-            # TODO: Doesn't work for multi-segment prefixes
-            directory = self.app.get('static_directory', prefix)
-        except KeyError:
+        prefix, rel_path = self.app._find_static_directory(path)
+        if prefix is None:
             raise ValueError(
-                'Unregistered static directory: {}'.format(prefix))
+                "Can't generate static URL for {}".format(path))
+        directory = self.app.get('static_directory', prefix)
         if isinstance(directory, str):
             # E.g., http://assets.example.com/static/images/logo.png
             url = posixpath.join(directory, *rel_path)
@@ -270,7 +264,6 @@ class Request(ARequest, BaseRequest):
                 url += self.make_query_string(query)
         else:
             # E.g., /static/images/logo.png
-            path = posixpath.join(prefix, *rel_path)
             url = self.make_url(path, query, **kwargs)
         return url
 
