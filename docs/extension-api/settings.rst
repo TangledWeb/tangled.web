@@ -15,7 +15,7 @@ Parsing settings
 Parsing settings from a file
 ============================
 
-.. automethod:: tangled.web.app.Application.register_content_type
+.. automethod:: tangled.web.app.Application.parse_settings_file
 
     This is a ``staticmethod`` wrapper around
     :func:`tangled.web.settings.parse_settings_file`, which is in turn
