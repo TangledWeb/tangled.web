@@ -2,12 +2,12 @@ import configparser
 import logging
 import logging.config
 import pdb
+import re
 import traceback
 
 import venusian
 
 from webob.exc import HTTPInternalServerError
-from webob.static import DirectoryApp
 
 import tangled.decorators
 from tangled.converters import as_tuple
@@ -28,6 +28,7 @@ from .representations import Representation
 from .resource.config import Field as ConfigField, RepresentationArg
 from .resource.mounted import MountedResource
 from .settings import parse_settings, parse_settings_file
+from .static import LocalDirectory, RemoteDirectory
 
 
 log = logging.getLogger(__name__)
@@ -201,7 +202,11 @@ class Application(Registry):
         # System handler chain
         handlers = [settings['exc']]
         if self.has_any('static_directory'):
-            handlers.append(settings['static_files'])
+            # Only enable static file handler if there's at least one
+            # local static directory registered.
+            dirs = self.get_all('static_directory')
+            if any(isinstance(d, LocalDirectory) for d in dirs):
+                handlers.append(settings['static_files'])
         handlers.append(settings['tweaker'])
         handlers.append(settings['notifier'])
         handlers.append(settings['resource_finder'])
@@ -451,7 +456,8 @@ class Application(Registry):
 
     # Static directories
 
-    def mount_static_directory(self, prefix, directory, index_page=None):
+    def mount_static_directory(self, prefix, directory, remote=False,
+                               index_page=None):
         """Mount a local or remote static directory.
 
         ``prefix`` is an alias referring to ``directory``.
@@ -465,18 +471,22 @@ class Application(Registry):
         ``reqeust.static_url`` and ``request.static_path`` will point
         to the remote directory.
 
+        ``remote`` can also be specified explicitly. In this context,
+        "remote" means not served by the application itself. E.g., you
+        might be mapping an alias in Nginx to a local directory.
+
         .. note:: It's best to always use
                   :meth:`tangled.web.request.Request.static_url`
                   :meth:`tangled.web.request.Request.static_path`
                   to generate static URLs.
 
         """
-        if directory.startswith('http://') or directory.startswith('https://'):
-            directory = directory
+        if remote or re.match(r'https?://', directory):
+            directory = RemoteDirectory(directory)
         else:
             prefix = tuple(prefix.strip('/').split('/'))
             directory = abs_path(directory)
-            directory = DirectoryApp(directory, index_page=index_page)
+            directory = LocalDirectory(directory, index_page=index_page)
         self.register('static_directory', directory, prefix)
 
     def _find_static_directory(self, path):

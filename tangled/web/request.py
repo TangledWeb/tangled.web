@@ -10,6 +10,7 @@ from tangled.decorators import reify, cached_property
 
 from .abcs import AHelpers, AMountedResource, ARequest, AResponse
 from .resource.config import Config
+from .static import RemoteDirectory
 
 
 log = logging.getLogger(__name__)
@@ -257,9 +258,10 @@ class Request(ARequest, BaseRequest):
             raise ValueError(
                 "Can't generate static URL for {}".format(path))
         directory = self.app.get('static_directory', prefix)
-        if isinstance(directory, str):
-            # E.g., http://assets.example.com/static/images/logo.png
-            url = posixpath.join(directory, *rel_path)
+        if isinstance(directory, RemoteDirectory):
+            # E.g., http://assets.example.com/static/images/logo.png or
+            # /var/www/example.com/static
+            url = posixpath.join(directory.path, *rel_path)
             if query:
                 url += self.make_query_string(query)
         else:
