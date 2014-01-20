@@ -146,6 +146,3 @@ def _same_origin(url_a, url_b):
     a = urlparse(url_a)
     b = urlparse(url_b)
     return (a.scheme, a.hostname, a.port) == (b.scheme, b.hostname, b.port)
-
-
-

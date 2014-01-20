@@ -401,7 +401,8 @@ class Application(Registry):
         self.register(
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
 
-    def register_content_type(self, content_type, representation_type, replace=False):
+    def register_content_type(self, content_type, representation_type,
+                              replace=False):
         """Register a content type.
 
         This does a few things. First, it registers the ``content_type``
