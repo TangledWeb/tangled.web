@@ -26,10 +26,4 @@ resource classes and methods.
 Mounting Resources
 ==================
 
-Resources are mounted like this:
-
-.. code-block:: python
-
-    app.mount_resource('home', 'mypackage.myresources:Home', '/')
-
 .. automethod:: tangled.web.app.Application.mount_resource

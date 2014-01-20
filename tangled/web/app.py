@@ -395,9 +395,59 @@ class Application(Registry):
             registry = self.get(type_, differentiator)
             registry.register(type_, arg, name)
 
-    def mount_resource(self, *args, **kwargs):
-        """Mount a resource at the specified path."""
-        mounted_resource = MountedResource(*args, **kwargs)
+    def mount_resource(self, name, factory, path, methods=()):
+        """Mount a resource at the specified path.
+
+        Basic example::
+
+            app.mount_resource('home', 'mypackage.resources:Home', '/')
+
+        Specifying URL vars::
+
+            app.mount_resource(
+                'user', 'mypackage.resources:User', '/user/<id>')
+
+        A unique ``name`` for the mounted resource must be specified.
+        This can be *any* string. It's used when generating resource
+        URLs via :meth:`.request.Request.resource_url`.
+
+        A ``factory`` must also be specified. This can be any class or
+        function that produces objects that implement the resource
+        interface (typically a subclass of
+        :class:`.resource.resource.Resource`). The factory may be passed
+        as a string with the following format:
+        ``package.module:factory``.
+
+        The ``path`` is an application relative path that may or may not
+        include URL vars.
+
+        A list of HTTP ``methods`` can be passed to constrain which
+        methods the resource will respond to. By default, it's assumed
+        that a resource will respond to all methods. Note however that
+        when subclassing :class:`.resource.resource.Resource`,
+        unimplemented methods will return a ``405 Method Not Allowed``
+        response, so it's often unnecessary to specify the list of
+        allowed methods here; this is mainly useful if you want to
+        mount different resources at the same path for different
+        methods.
+
+        About URL vars:
+
+        The format of a URL var is ``<(converter)identifier:regex>``.
+        Angle brackets delimit URL vars. Only the ``identifier`` is
+        required; it can be an valid Python identifier.
+
+        If a ``converter`` is specified, it can be any built-in such as
+        ``int`` or ``str``; it can also refer to any of the converters
+        in :mod:`tangled.util.converters`.
+
+        The ``regex`` can be *almost* any regular expression. The
+        exception is that ``<`` and ``>`` can't be used. In practice,
+        this means that named groups (``(?P<name>regex)``) can't be used
+        (which would be pointless anyway), nor can "look behinds".
+
+        """
+        mounted_resource = MountedResource(name, factory, path, methods)
         self.register(
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
 
