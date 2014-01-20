@@ -27,7 +27,7 @@ Here's a really simple Tangled Web app:
         }
         app = Application(settings)
         app.mount_resource('hello', Hello, '/')
-        app.mount_resource('hello_name', Hello, '/{name}')
+        app.mount_resource('hello_name', Hello, '/<name>')
         server = make_server('0.0.0.0', 6666, app)
         server.serve_forever()
 
