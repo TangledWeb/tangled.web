@@ -381,7 +381,9 @@ class Application(Registry):
 
         A list of ``methods`` can be passed to constrain which HTTP
         methods the arg can be used on. By default, all methods are
-        allowed.
+        allowed. ``methods`` can be specified as a string like ``'GET'``
+        or ``'GET,POST'`` or as a list of methods like
+        ``('GET', 'POST')``.
 
         """
         if methods == '*':
