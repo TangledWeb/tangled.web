@@ -100,6 +100,9 @@ class Application(Registry):
         for include in self.get_setting('includes'):
             self.include(include)
 
+        for where in self.get_setting('scan'):
+            self.scan(where)
+
         request_factory = self.get_setting('request_factory')
         self.register(abcs.ARequest, request_factory)
         response_factory = self.get_setting('response_factory')

@@ -16,6 +16,7 @@ CONVERSION_MAP = {
     'tangled.app.on_created': 'list_of_objects',
     'tangled.app.request_factory': 'object',
     'tangled.app.response_factory': 'object',
+    'tangled.app.scan': 'tuple',
     'tangled.app.tunnel_over_post': 'tuple',
 }
 
