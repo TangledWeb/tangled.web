@@ -18,8 +18,9 @@ Creating an Extension Package
 
 To create your own extension package, you can use the ``tangled.contrib``
 namespace. If you install the ``tangled.contrib`` package, you will be able to
-create a contrib package easily using the ``tangled contrib new`` command.
+create a contrib package easily using the ``tangled scaffold`` command::
 
+    tangled scaffold contrib tangled.contrib.{name}
 
 .. _GitHub: https://github.com/TangledWeb
 .. _PEP8: http://www.python.org/dev/peps/pep-0008/
