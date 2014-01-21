@@ -24,6 +24,9 @@ setup(
     shell = tangled.web.scripts.shell
     show = tangled.web.scripts.show
 
+    [tangled.scaffolds]
+    basic = tangled.web.scaffolds:basic
+
     """,
     classifiers=(
         'Development Status :: 1 - Planning',
