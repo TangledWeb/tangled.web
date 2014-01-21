@@ -2,6 +2,6 @@ language: python
 python:
   - "3.3"
 install:
-  - pip install git://github.com/TangledWeb/tangled.git#egg=tangled
+  - pip install git+git://github.com/TangledWeb/tangled.git#egg=tangled
   - pip install .
 script: py.test
