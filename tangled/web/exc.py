@@ -21,3 +21,7 @@ class DebugHTTPInternalServerError(HTTPInternalServerError):
         body_template = self.body_template.format(
             timestamp=now, content=content)
         super().__init__(body_template=body_template, *args, **kwargs)
+
+        # HACK
+        safe_substitue = self.body_template_obj.safe_substitute
+        self.body_template_obj.substitute = safe_substitue
