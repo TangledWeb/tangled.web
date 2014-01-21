@@ -97,8 +97,11 @@ def static_files(app, request, next_handler):
     prefix, rel_path = app._find_static_directory(request.path_info)
     if prefix is not None:
         request.is_static = True
+        environ = request.environ.copy()
+        environ['PATH_INFO'] = '/' + '/'.join(rel_path)
+        static_request = app.make_request(environ)
         directory_app = app.get('static_directory', prefix)
-        return directory_app(app.make_blank_request('/'.join(rel_path)))
+        return directory_app(static_request)
     return next_handler(app, request)
 
 
