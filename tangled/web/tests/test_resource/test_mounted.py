@@ -1,5 +1,7 @@
 import unittest
 
+from tangled.web import Application
+from tangled.web.handlers import resource_finder
 from tangled.web.resource.mounted import MountedResource
 
 
@@ -36,3 +38,31 @@ class TestMountedResouce(unittest.TestCase):
         mr = MountedResource('test', None, path)
         with self.assertRaises(ValueError):
             mr.format_path(path='somewhere', name='bob', id='x', format='json')
+
+    def test_add_slash(self):
+        path = '/some/dir/'
+        mr = MountedResource('test', None, path)
+        self.assertTrue(mr.add_slash)
+        self.assert_(mr.match('GET', '/some/dir/'))
+        self.assert_(mr.match('GET', '/some/dir'))
+        self.assertEqual(mr.format_path(), '/some/dir/')
+
+    def test_add_slash_redirect(self):
+        app = Application({
+            'tangled.app.csrf.enabled': False,
+        })
+        factory = lambda *args: type('Resource', (), {'GET': None})
+        app.mount_resource('test', factory, '/some/dir', add_slash=True)
+
+        # Should not redirect
+        next_handler = lambda app_, request_: 'NEXT'
+        request = app.make_blank_request('/some/dir/')
+        self.assertEqual(resource_finder(app, request, next_handler), 'NEXT')
+
+        # Should redirect
+        request = app.make_blank_request('/some/dir')
+        try:
+            resource_finder(app, request, next_handler)
+        except Exception as exc:
+            self.assertTrue(exc.status.startswith('3'))
+            self.assertTrue(exc.location.endswith('/some/dir/'))

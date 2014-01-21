@@ -171,6 +171,10 @@ def resource_finder(app, request, next_handler):
     else:
         request.abort(404)
 
+    if match.add_slash and not request.path_info.endswith('/'):
+        request.path_info += '/'
+        request.abort(303, location=request.url)
+
     resource = match.factory(app, request, match.name, match.urlvars)
     if not hasattr(resource, request.method):
         request.abort(405)

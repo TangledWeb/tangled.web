@@ -6,7 +6,8 @@ from tangled.converters import get_converter, as_tuple
 from tangled.util import load_object
 
 
-Match = namedtuple('Match', ('name', 'factory', 'path', 'urlvars'))
+Match = namedtuple(
+    'Match', ('name', 'factory', 'path', 'urlvars', 'add_slash'))
 
 
 class MountedResource:
@@ -20,14 +21,18 @@ class MountedResource:
         '>'
     )
 
-    def __init__(self, name, factory, path, methods=()):
+    def __init__(self, name, factory, path, methods=(), add_slash=False):
         self.name = name
         self.factory = load_object(factory, level=4)
         self.path = path
         self.methods = set(as_tuple(methods, sep=','))
+        self.add_slash = add_slash = True if path.endswith('/') else add_slash
 
         if not path.startswith('/'):
             path = '/' + path
+
+        if add_slash:
+            path = path.rstrip('/')
 
         urlvars_info = {}
         path_regex = ['^']
@@ -63,6 +68,10 @@ class MountedResource:
             path_regex.append(remainder)
             format_string.append(remainder)
 
+        if add_slash:
+            path_regex.append(r'(?:/?)')
+            format_string.append('/')
+
         path_regex.append('$')
         path_regex = ''.join(path_regex)
 
@@ -85,8 +94,8 @@ class MountedResource:
             for k in urlvars:
                 converter = self.urlvars_info[k]['converter']
                 urlvars[k] = converter(urlvars[k])
-
-            return Match(self.name, self.factory, self.path, urlvars)
+            return Match(
+                self.name, self.factory, self.path, urlvars, self.add_slash)
 
     def match_request(self, request):
         return self.match(request.method, request.path_info)
