@@ -3,7 +3,6 @@ python:
   - "3.3"
 install:
   - pip install coverage==3.7.1
-  - pip install pytest-cov==1.6
   - pip install git+git://github.com/TangledWeb/tangled.git#egg=tangled
   - pip install .
-script: py.test
+script: tangled test
