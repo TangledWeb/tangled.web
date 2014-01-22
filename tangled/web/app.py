@@ -51,10 +51,34 @@ class Application(Registry):
     requests, and resources so they can inspect settings, retrieve
     items from the registry, etc...
 
+    **Registry:**
+
     Speaking of which, the application instance acts as a registry (it's
     a subclass of :class:`tangled.registry.Registry`). This provides
     a means for extensions and application code to set application level
     globals.
+
+    **Settings:**
+
+    ``settings`` can be passed as either a file name pointing to a
+    settings file or as a dict. File names can be specified as absolute,
+    relative, or asset paths:
+
+        - development.ini
+        - /some/where/production.ini
+        - some.package:some.ini
+
+    When ``settings`` is a dict, you can specify that you want the
+    settings to be parsed by passing ``parse_settings=True``. This uses
+    :func:`tangled.web.settings.parse_settings` to parse known settings
+    as the types specified in
+    :const:`tangled.web.settings.CONVERSION_MAP`. This also lets you use
+    the ``key:converter`` syntax with your settings.
+
+    Note that when a settings file is passed, it will *always* be
+    parsed as described above.
+
+    **Logging:**
 
     If settings are loaded from a config file and that config file (or
     one of the config files it extends) contains logging config sections
@@ -65,7 +89,9 @@ class Application(Registry):
     """
 
     def __init__(self, settings, parse_settings=False):
-        if parse_settings:
+        if isinstance(settings, str):
+            settings = self.parse_settings_file(settings)
+        elif parse_settings:
             settings = self.parse_settings(settings)
         default_settings = self.parse_settings_file(
             'tangled.web:defaults.ini', meta_settings=False)

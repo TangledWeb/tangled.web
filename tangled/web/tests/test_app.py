@@ -25,6 +25,15 @@ class Tests(unittest.TestCase):
         self.assertIsInstance(app, Application)
         self.assertTrue(hasattr(app, 'settings'))
 
+    def test_create_with_settings_file(self):
+        app = self.make_app('tangled.web.tests:test.ini')
+        self.assertIsInstance(app, Application)
+        self.assertTrue(hasattr(app, 'settings'))
+        self.assertIn('b', app.settings)
+        self.assertTrue(app.settings['b'])
+        self.assertIn('n', app.settings)
+        self.assertEqual(app.settings['n'], 1)
+
     def test_create_with_include(self):
         settings = {
             'tangled.app.includes': 'tangled.web.tests.test_app:include'
