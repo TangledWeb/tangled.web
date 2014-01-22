@@ -8,7 +8,10 @@ from tangled.util import fully_qualified_name
 
 class config:
 
-    """Decorator for configuring resources.
+    """Decorator for configuring resources methods.
+
+    When used on a resource class, the class level configuration will be
+    applied to all methods.
 
     Example::
 

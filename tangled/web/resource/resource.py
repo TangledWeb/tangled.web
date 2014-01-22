@@ -3,10 +3,21 @@ from webob.exc import HTTPMethodNotAllowed
 
 class Resource:
 
-    """Resource type.
+    """Base resource class.
 
-    When creating your own resources, it's not strictly necessary to
-    subclass this type.
+    Usually, you will want to subclass :class:`Resource` when creating
+    your own resources. Doing so will ensure your resources are properly
+    initialized.
+
+    Subclasses will automatically return a ``405 Method Not Allowed``
+    response for unimplemented methods.
+
+    Subclasses also have :meth:`.url` and :meth:`.path` methods that
+    generate URLs and paths to the "current resource". E.g., in a
+    template, you can do ``resource.path()`` to generate the
+    application-relative path to the current resource. You can also pass
+    in query parameters and alternate URL vars to generate URLs and
+    paths based on the current resource.
 
     """
 
@@ -17,10 +28,22 @@ class Resource:
         self.urlvars = urlvars
 
     def url(self, urlvars=None, **kwargs):
+        """Generate a fully qualified URL for this resource.
+
+        You can pass ``urlvars``, ``query``, and/or ``fragment`` to
+        generate a URL based on this resource.
+
+        """
         urlvars = self.urlvars if urlvars is None else urlvars
         return self.request.resource_url(self, urlvars, **kwargs)
 
     def path(self, urlvars=None, **kwargs):
+        """Generate an application-relative URL path for this resource.
+
+        You can pass ``urlvars``, ``query``, and/or ``fragment`` to
+        generate a path based on this resource.
+
+        """
         urlvars = self.urlvars if urlvars is None else urlvars
         return self.request.resource_path(self, urlvars, **kwargs)
 
