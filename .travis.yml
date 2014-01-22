@@ -14,4 +14,4 @@ script:
     --cov tangled.web/tangled/web
     --doctest-modules
     tangled.web/tangled/web
-  - sphinx-build -E ./tangled.web/docs docs
+#  - sphinx-build -E ./tangled.web/docs docs
