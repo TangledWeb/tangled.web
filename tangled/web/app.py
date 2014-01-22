@@ -87,8 +87,8 @@ class Application(Registry):
         self.add_config_field('*/*', 'location', None)
         self.add_config_field('*/*', 'response_attrs', dict)
 
-        # Handlers added from includes have precedence over handlers
-        # listed in settings.
+        # Handlers added from settings have precedence over handlers
+        # added via includes.
         handlers = self.get_setting('handlers')
         for handler in handlers:
             self.add_handler(handler)
