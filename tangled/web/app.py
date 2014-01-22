@@ -332,6 +332,8 @@ class Application(Registry):
         removed.)
 
         """
+        event_type = load_object(event_type)
+        func = load_object(func)
         subscriber = Subscriber(event_type, func, priority, once, args)
         self.register(event_type, subscriber, subscriber)
 
