@@ -11,6 +11,37 @@ event dependent.
 """
 import sys
 
+import venusian
+
+
+class subscriber:
+
+    """Decorator for adding event subscribers.
+
+    Subscribers registered this way won't be activated until a scan is
+    done via :meth:`tangled.web.app.Application.scan`.
+
+    Example::
+
+        @subscriber('tangled.web.events:ResourceFound')
+        def on_resource_found(event):
+            log.debug(event.resource.name)
+
+    """
+
+    def __init__(self, event_type, *args, **kwargs):
+        self.event_type = event_type
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self, wrapped):
+        def venusian_callback(scanner, *_):
+            app = scanner.app
+            app.add_subscriber(
+                self.event_type, wrapped, *self.args, **self.kwargs)
+        venusian.attach(wrapped, venusian_callback, category='tangled')
+        return wrapped
+
 
 class ApplicationCreated:
 
