@@ -11,9 +11,7 @@ class TestConfig(unittest.TestCase):
 
     def setUp(self):
         config.callbacks = []
-        self.app = Application({
-            'tangled.app.csrf.enabled': False,
-        })
+        self.app = Application({})
 
     def _scan(self, cls):
         scanner = venusian.Scanner(app=self.app)

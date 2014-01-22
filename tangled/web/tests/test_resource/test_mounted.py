@@ -48,9 +48,7 @@ class TestMountedResouce(unittest.TestCase):
         self.assertEqual(mr.format_path(), '/some/dir/')
 
     def test_add_slash_redirect(self):
-        app = Application({
-            'tangled.app.csrf.enabled': False,
-        })
+        app = Application({})
         factory = lambda *args: type('Resource', (), {'GET': None})
         app.mount_resource('test', factory, '/some/dir', add_slash=True)
 

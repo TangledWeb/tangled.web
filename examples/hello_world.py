@@ -16,7 +16,6 @@ class Hello(Resource):
 if __name__ == '__main__':
     settings = {
         'debug': True,
-        'tangled.app.csrf.enabled': False,
     }
     app = Application(settings)
     app.mount_resource('hello', Hello, '/')

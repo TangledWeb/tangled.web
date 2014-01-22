@@ -17,7 +17,6 @@ class Tests(unittest.TestCase):
 
     def make_app(self, settings=None, parse=True):
         settings = settings if settings is not None else {}
-        settings['tangled.app.csrf.enabled'] = False
         app = Application(settings, parse)
         return app
 
