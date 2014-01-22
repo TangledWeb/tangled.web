@@ -1,5 +1,6 @@
 import functools
 
+from tangled.converters import as_args
 from tangled.settings import parse_settings, parse_settings_file
 
 
@@ -16,6 +17,7 @@ CONVERSION_MAP = {
     'tangled.app.on_created': 'list_of_objects',
     'tangled.app.request_factory': 'object',
     'tangled.app.response_factory': 'object',
+    'tangled.app.resources': as_args(None, None, None, None, 'bool'),
     'tangled.app.scan': 'tuple',
     'tangled.app.tunnel_over_post': 'tuple',
 }
