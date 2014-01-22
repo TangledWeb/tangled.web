@@ -9,6 +9,7 @@ import traceback
 from wsgiref.simple_server import make_server
 
 from tangled.abcs import ACommand
+from tangled.util import fully_qualified_name
 
 from .mixins import AppMixin
 
@@ -36,7 +37,8 @@ class Command(ACommand, AppMixin):
             return self.run_with_monitor()
 
         print('[{}]'.format(datetime.datetime.now()))
-        print('Loading app {0.app_factory}...'.format(self.args))
+        factory_name = fully_qualified_name(self.args.app_factory)
+        print('Creating app from {} factory'.format(factory_name))
         app = self.make_app()
 
         server = None
