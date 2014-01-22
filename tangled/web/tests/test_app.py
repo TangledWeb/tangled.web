@@ -15,9 +15,9 @@ def on_created(event):
 
 class Tests(unittest.TestCase):
 
-    def make_app(self, settings=None, parse=True):
+    def make_app(self, settings=None, parse_settings=True):
         settings = settings if settings is not None else {}
-        app = Application(settings, parse)
+        app = Application(settings, parse_settings)
         return app
 
     def test_create(self):

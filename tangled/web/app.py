@@ -64,8 +64,8 @@ class Application(Registry):
 
     """
 
-    def __init__(self, settings, parse=False):
-        if parse:
+    def __init__(self, settings, parse_settings=False):
+        if parse_settings:
             settings = self.parse_settings(settings)
         default_settings = self.parse_settings_file(
             'tangled.web:defaults.ini', meta_settings=False)
