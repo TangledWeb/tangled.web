@@ -19,6 +19,7 @@ CONVERSION_MAP = {
     'tangled.app.response_factory': 'object',
     'tangled.app.resources': as_args(None, None, None, None, 'bool'),
     'tangled.app.scan': 'tuple',
+    'tangled.app.static_directories': as_args(None, None, 'bool', None),
     'tangled.app.tunnel_over_post': 'tuple',
 }
 

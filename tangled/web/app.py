@@ -93,9 +93,13 @@ class Application(Registry):
         for handler in handlers:
             self.add_handler(handler)
 
-        # Mount resources from settings before those from includes. It's
-        # assumed that only the main application will define resources
-        # this way.
+        # Mount static directories and resources from settings before
+        # those from includes. It's assumed that only the main
+        # application will specify static directories and resources this
+        # way.
+        for arg_spec in self.get_setting('static_directories'):
+            self.mount_static_directory(*arg_spec['args'], **arg_spec['kwargs'])
+
         for arg_spec in self.get_setting('resources'):
             self.mount_resource(*arg_spec['args'], **arg_spec['kwargs'])
 
