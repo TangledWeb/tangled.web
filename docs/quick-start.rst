@@ -19,63 +19,65 @@ Mac OS, `Homebrew <http://brew.sh/>`_ is an easy way to install Python::
 
 .. note:: Python 2.x is *not* supported, and there are no plans to support it.
 
+Install Git
+===========
+
+Currently, it's necessary to install `Git <http://git-scm.com/>`_ so that
+``tangled.*`` dependencies can be installed.
+
 Virtual Env
 ===========
 
 Next, set up an isolated virtual environment. Since we're using Python 3, this
 is built in. The command for creating a virtual env looks like this::
 
-    python3 -m venv helloworld
+    python3 -m venv helloworld.venv
 
-Change into the ``helloworld`` directory and download the following file
+Change into the ``helloworld.venv`` directory and download the following file
 there:
 
-    https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+https://raw.github.com/pypa/pip/master/contrib/get-pip.py
 
 Then run the following command::
 
     ./bin/python get-pip.py
 
-Get Source Dependencies
-=======================
+Install Dependencies
+====================
 
-Create a subdirectory in the ``helloworld`` directory named ``src``, then
-change into that directory and clone a couple of ``TangledWeb`` packages::
+A couple of Tangled dependencies need to be installed so that the
+``tangled scaffold`` command and ``basic`` scaffold are available::
 
-    git clone https://github.com/TangledWeb/tangled
-    git clone https://github.com/TangledWeb/tangled.web
+    ./bin/pip install -e git+git://github.com/TangledWeb/tangled#egg=tangled
+    ./bin/pip install -e git+git://github.com/TangledWeb/tangled.web#egg=tangled.web
 
-Now move back up into the ``helloworld`` directory and install those
-packages::
-
-    ./bin/pip install -e src/tangled
-    ./bin/pip install -e src/tangled.web
+.. note:: Once ``tangled.web`` is released to PyPI, this will be reduced to
+          simply ``./bin/pip install tangled.web``
 
 Create a Basic Tangled Web App
 ==============================
 
 Now that the virtual environment is set up and the Tangled dependencies have
 been installed, a project can be created. Run the following commands in the
-``helloworld`` directory::
+``helloworld.venv`` directory::
 
-    ./bin/tangled scaffold -d src/helloworld basic helloworld
-    ./bin/pip install -e src/helloworld
+    ./bin/tangled scaffold basic helloworld
+    ./bin/pip install -e helloworld
 
 Serve it Up
 ===========
 
 Now that everything's installed, it's time to run the app::
 
-    ./bin/tangled serve -f src/helloworld/development.ini
+    ./bin/tangled serve -f helloworld/development.ini
 
 Now you can visit http://localhost:6666/ and http://localhost:6666/name.
 
 Next Steps
 ==========
 
-Take a look at the app configuration in
-``src/helloworld/helloworld/__init__.py`` and the ``Hello`` resource in
-``src/helloworld/helloworld/resources.py``.
+Take a look at the app configuration in ``helloworld/helloworld/__init__.py``
+and the ``Hello`` resource in ``helloworld/helloworld/resources.py``.
 
 The :doc:`app-api/index` documentation currently has the most comprehensive
 info on creating and configuring Tangled Web apps.
