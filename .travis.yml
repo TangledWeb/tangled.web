@@ -1,8 +1,16 @@
-language: python
 python:
   - "3.3"
 install:
-  - pip install coverage==3.7.1
   - pip install git+git://github.com/TangledWeb/tangled.git#egg=tangled
-  - pip install .
-script: tangled test
+  - pip install -e .[dev]
+script:
+  - cd ..
+  - >
+    py.test
+    --ignore tangled.web/setup.py
+    --ignore tangled.web/docs
+    --ignore tangled.web/tangled/web/scaffolds
+    --cov tangled.web/tangled/web
+    --doctest-modules
+    tangled.web/tangled/web
+  - sphinx-build -E ./tangled.web/docs docs
