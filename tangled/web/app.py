@@ -78,6 +78,10 @@ class Application(Registry):
     Note that when a settings file is passed, it will *always* be
     parsed as described above.
 
+    Extra settings can be passed as keyword args. These settings will
+    override *all* other settings. They will be parsed just like other
+    settings if the ``parse_settings`` flag is set.
+
     **Logging:**
 
     If settings are loaded from a config file and that config file (or
@@ -88,7 +92,7 @@ class Application(Registry):
 
     """
 
-    def __init__(self, settings, parse_settings=False):
+    def __init__(self, settings, parse_settings=False, **extra_settings):
         if isinstance(settings, str):
             settings = self.parse_settings_file(settings)
         elif parse_settings:
@@ -97,6 +101,10 @@ class Application(Registry):
             'tangled.web:defaults.ini', meta_settings=False)
         self.settings = default_settings
         self.settings.update(settings)
+        if extra_settings:
+            if parse_settings:
+                extra_settings = self.parse_settings(extra_settings)
+            self.settings.update(extra_settings)
 
         # Register default representations (content type => repr. type).
         # Includes can override this.

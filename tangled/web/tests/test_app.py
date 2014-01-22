@@ -15,9 +15,9 @@ def on_created(event):
 
 class Tests(unittest.TestCase):
 
-    def make_app(self, settings=None, parse_settings=True):
+    def make_app(self, settings=None, parse_settings=True, **extra_settings):
         settings = settings if settings is not None else {}
-        app = Application(settings, parse_settings)
+        app = Application(settings, parse_settings, **extra_settings)
         return app
 
     def test_create(self):
@@ -26,13 +26,17 @@ class Tests(unittest.TestCase):
         self.assertTrue(hasattr(app, 'settings'))
 
     def test_create_with_settings_file(self):
-        app = self.make_app('tangled.web.tests:test.ini')
+        app = self.make_app('tangled.web.tests:test.ini', n=2, x='x')
         self.assertIsInstance(app, Application)
         self.assertTrue(hasattr(app, 'settings'))
         self.assertIn('b', app.settings)
         self.assertTrue(app.settings['b'])
+        # Override
         self.assertIn('n', app.settings)
-        self.assertEqual(app.settings['n'], 1)
+        self.assertEqual(app.settings['n'], 2)
+        # Extra
+        self.assertIn('x', app.settings)
+        self.assertEqual(app.settings['x'], 'x')
 
     def test_create_with_include(self):
         settings = {
