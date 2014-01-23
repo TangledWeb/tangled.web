@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from markupsafe import Markup
 from webob.exc import HTTPForbidden
 
-from tangled.util import constant_time_compare, random_bytes, random_string
+from tangled.util import constant_time_compare, random_string
 
 from .exc import ConfigurationError
 
