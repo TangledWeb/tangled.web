@@ -6,8 +6,7 @@ from tangled.converters import get_converter, as_tuple
 from tangled.util import load_object
 
 
-Match = namedtuple(
-    'Match', ('name', 'factory', 'path', 'urlvars', 'add_slash'))
+Match = namedtuple('Match', ('mounted_resource', 'urlvars'))
 
 
 class MountedResource:
@@ -21,11 +20,13 @@ class MountedResource:
         '>'
     )
 
-    def __init__(self, name, factory, path, methods=(), add_slash=False):
+    def __init__(self, name, factory, path, methods=(), method_name=None,
+                 add_slash=False):
         self.name = name
         self.factory = load_object(factory, level=4)
         self.path = path
         self.methods = set(as_tuple(methods, sep=','))
+        self.method_name = method_name
         self.add_slash = add_slash = True if path.endswith('/') else add_slash
 
         if not path.startswith('/'):
@@ -94,8 +95,7 @@ class MountedResource:
             for k in urlvars:
                 converter = self.urlvars_info[k]['converter']
                 urlvars[k] = converter(urlvars[k])
-            return Match(
-                self.name, self.factory, self.path, urlvars, self.add_slash)
+            return Match(self, urlvars)
 
     def match_request(self, request):
         return self.match(request.method, request.path_info)

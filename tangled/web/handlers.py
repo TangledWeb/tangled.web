@@ -171,15 +171,23 @@ def resource_finder(app, request, next_handler):
     else:
         request.abort(404)
 
-    if match.add_slash and not request.path_info.endswith('/'):
+    mounted_resource = match.mounted_resource
+    urlvars = match.urlvars
+
+    if mounted_resource.add_slash and not request.path_info.endswith('/'):
         request.path_info += '/'
         request.abort(303, location=request.url)
 
-    resource = match.factory(app, request, match.name, match.urlvars)
-    if not hasattr(resource, request.method):
+    resource = mounted_resource.factory(
+        app, request, mounted_resource.name, urlvars)
+    method_name = mounted_resource.method_name or request.method
+
+    if not hasattr(resource, method_name):
         request.abort(405)
+
     request.resource = resource
-    app.notify_subscribers(ResourceFound, app, request, resource)
+    request.resource_method = method_name
+    app.notify_subscribers(ResourceFound, app, request, mounted_resource)
     return next_handler(app, request)
 
 
@@ -221,7 +229,7 @@ def main(app, request, _):
     are set from the representation).
 
     """
-    method = getattr(request.resource, request.method)
+    method = getattr(request.resource, request.resource_method)
     data = method()
 
     if isinstance(data, Response):

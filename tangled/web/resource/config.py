@@ -4,6 +4,7 @@ from copy import copy
 import venusian
 
 from tangled.util import fully_qualified_name
+from tangled.web.const import ALL_HTTP_METHODS
 
 
 class config:
@@ -46,7 +47,18 @@ class config:
     def __call__(self, wrapped):
         def venusian_callback(scanner, *_):
             app = scanner.app
-            self._validate_args(app, wrapped)
+
+            # This is here so the app won't start if any of the args
+            # passed to @config are invalid. Otherwise, the invalid args
+            # wouldn't be detected until a request is made to a resource
+            # that was decorated with invalid args.
+            # NOTE: We can't check *everything* preemptively here, but
+            # we do what we can.
+            if isinstance(wrapped, type):
+                Config(app, 'GET', self.content_type, **self.kwargs)
+            elif wrapped.__name__ in ALL_HTTP_METHODS:
+                Config(app, wrapped.__name__, self.content_type, **self.kwargs)
+
             fq_name = fully_qualified_name(wrapped)
             differentiator = fq_name, self.content_type
             if app.contains(config, differentiator):
@@ -57,14 +69,6 @@ class config:
         self.__class__.callbacks.append(venusian_callback)
         return wrapped
 
-    def _validate_args(self, app, wrapped):
-        # This is here so the app won't start if any of the args passed
-        # to @config are invalid. Otherwise, the invalid args
-        # wouldn't be detected until a request is made to a resource
-        # that was decorated with invalid args.
-        method = 'GET' if isinstance(wrapped, type) else wrapped.__name__
-        Config(app, method, self.content_type, **self.kwargs)
-
 
 _fields = ('methods', 'content_type', 'name', 'default', 'required')
 ConfigArg = type('ConfigArg', (namedtuple('ConfigArg', _fields),), {})
@@ -74,8 +78,8 @@ RepresentationArg = type('RepresentationArg', (ConfigArg,), {})
 
 class Config:
 
-    def __init__(self, app, method, content_type, **kwargs):
-        self.method = method
+    def __init__(self, app, request_method, content_type, **kwargs):
+        self.request_method = request_method
         self.content_type = content_type
         self.representation_args = {}
 
@@ -98,8 +102,9 @@ class Config:
                             default = copy(default)
                         setattr(self, field.name, default)
 
-        set_default_fields(app.get(Field, (method, '*/*')))
-        set_default_fields(app.get(Field, (method, content_type)))
+        set_default_fields(app.get(Field, (request_method, '*/*')))
+        if content_type != '*/*':
+            set_default_fields(app.get(Field, (request_method, content_type)))
 
         def set_default_args(args):
             if args:
@@ -117,8 +122,10 @@ class Config:
                             default = copy(default)
                         self.representation_args[name] = default
 
-        set_default_args(app.get(RepresentationArg, (method, '*/*')))
-        set_default_args(app.get(RepresentationArg, (method, content_type)))
+        set_default_args(app.get(RepresentationArg, (request_method, '*/*')))
+        if content_type != '*/*':
+            set_default_args(
+                app.get(RepresentationArg, (request_method, content_type)))
 
         for name, value in kwargs.items():
             value = copy(value)
@@ -129,10 +136,11 @@ class Config:
             else:
                 raise TypeError(
                     'Unknown @config arg for {} {}: {}'
-                    .format(method, content_type, name))
+                    .format(request_method, content_type, name))
 
     @classmethod
-    def for_resource(cls, app, resource, method, content_type):
+    def for_resource(cls, app, resource, request_method, content_type,
+                     resource_method=None):
         """Get :class:`Config` for resource, method, & content type.
 
         This collects all the relevant config set via ``@config`` and
@@ -143,13 +151,18 @@ class Config:
         Returns an info structure populated with class level defaults
         for */* plus method level info for ``content_type``.
 
+        If the resource method name differs from the request method
+        name, pass ``resource_method`` so the method level config can be
+        found.
+
         Typically, this wouldn't be used directly; usually
         :meth:`Request.resource_config` would be used to get the
         info for the resource associated with the current request.
 
         """
         resource_cls = resource.__class__
-        resource_method = getattr(resource_cls, method)
+        resource_method = resource_method or request_method
+        resource_method = getattr(resource_cls, resource_method)
         cls_name = fully_qualified_name(resource_cls)
         meth_name = fully_qualified_name(resource_method)
         data = (
@@ -162,4 +175,4 @@ class Config:
         for d in data:
             if d:
                 kwargs.update(d)
-        return cls(app, method, content_type, **kwargs)
+        return cls(app, request_method, content_type, **kwargs)

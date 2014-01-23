@@ -445,7 +445,8 @@ class Application(Registry):
             registry = self.get(type_, differentiator)
             registry.register(type_, arg, name)
 
-    def mount_resource(self, name, factory, path, methods=(), add_slash=False):
+    def mount_resource(self, name, factory, path, methods=(), method_name=None,
+                       add_slash=False):
         """Mount a resource at the specified path.
 
         Basic example::
@@ -502,7 +503,8 @@ class Application(Registry):
 
         """
         mounted_resource = MountedResource(
-            name, factory, path, methods=methods, add_slash=add_slash)
+            name, factory, path, methods=methods, method_name=method_name,
+            add_slash=add_slash)
         self.register(
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
 

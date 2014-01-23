@@ -161,7 +161,8 @@ class Request(ARequest, BaseRequest):
 
         """
         return Config.for_resource(
-            self.app, self.resource, self.method, self.response_content_type)
+            self.app, self.resource, self.method, self.response_content_type,
+            self.resource_method)
 
     # URL generators
 
