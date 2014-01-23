@@ -7,9 +7,7 @@ from zc.recipe.egg.egg import Eggs
 TEMPLATE = """\
 import sys
 
-SYS_PATHS = [
-{sys_paths}
-]
+SYS_PATHS = [{sys_paths}]
 
 for path in reversed(SYS_PATHS):
     if path not in sys.path:
@@ -52,7 +50,11 @@ class WSGIApplication(object):
         egg = Eggs(self.buildout, self.options['recipe'], self.options)
         requirements, working_set = egg.working_set()
         sys_paths = [dist.location for dist in working_set]
-        sys_paths = ''.join("    '{}',\n".format(p) for p in sys_paths)
+        if sys_paths:
+            sys_paths = ''.join("    '{}',\n".format(p) for p in sys_paths)
+            sys_paths = '\n{}'.format(sys_paths)
+        else:
+            sys_paths = ''
 
         extra_settings = {}
         for k, v in self.options.items():
@@ -68,7 +70,7 @@ class WSGIApplication(object):
             extra_settings = ''.join(
                 "    '{}': '{}',\n"
                 .format(k, v) for (k, v) in extra_settings.items())
-            extra_settings = '\n{},\n'.format(extra_settings)
+            extra_settings = '\n{}'.format(extra_settings)
         else:
             extra_settings = ''
 
