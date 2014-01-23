@@ -26,14 +26,17 @@ class Tests(unittest.TestCase):
         self.assertTrue(hasattr(app, 'settings'))
 
     def test_create_with_settings_file(self):
-        app = self.make_app('tangled.web.tests:test.ini', n=2, x='x')
+        app = self.make_app('tangled.web.tests:test.ini', n=3, x='x')
         self.assertIsInstance(app, Application)
         self.assertTrue(hasattr(app, 'settings'))
         self.assertIn('b', app.settings)
-        self.assertTrue(app.settings['b'])
+        self.assertIs(app.settings['b'], True)
+        # Conversion
+        self.assertIn('m', app.settings)
+        self.assertEqual(app.settings['m'], 1)
         # Override
         self.assertIn('n', app.settings)
-        self.assertEqual(app.settings['n'], 2)
+        self.assertEqual(app.settings['n'], 3)
         # Extra
         self.assertIn('x', app.settings)
         self.assertEqual(app.settings['x'], 'x')
