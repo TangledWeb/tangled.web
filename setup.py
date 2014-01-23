@@ -12,6 +12,7 @@ setup(
         'MarkupSafe>=0.18',
         'venusian>=1.0a8',
         'WebOb>=1.3.1',
+        'zc.recipe.egg',
     ),
     extras_require={
         'dev': (
@@ -26,6 +27,9 @@ setup(
 
     [tangled.scaffolds]
     basic = tangled.web.scaffolds:basic
+
+    [zc.buildout]
+    wsgi_application = tangled.web.recipes:WSGIApplication
 
     """,
     classifiers=(
