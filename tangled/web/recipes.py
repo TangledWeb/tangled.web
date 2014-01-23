@@ -52,7 +52,7 @@ class WSGIApplication(object):
         egg = Eggs(self.buildout, self.options['recipe'], self.options)
         requirements, working_set = egg.working_set()
         sys_paths = [dist.location for dist in working_set]
-        sys_paths = ',\n'.join('    {}'.format(p) for p in sys_paths)
+        sys_paths = ''.join("    '{}',\n".format(p) for p in sys_paths)
 
         extra_settings = {}
         for k, v in self.options.items():
@@ -65,8 +65,8 @@ class WSGIApplication(object):
             if include:
                 extra_settings[k] = v
         if extra_settings:
-            extra_settings = ',\n'.join(
-                "    '{}': '{}'"
+            extra_settings = ''.join(
+                "    '{}': '{}',\n"
                 .format(k, v) for (k, v) in extra_settings.items())
             extra_settings = '\n{},\n'.format(extra_settings)
         else:
