@@ -5,12 +5,5 @@ install:
   - pip install git+git://github.com/TangledWeb/tangled.git#egg=tangled[dev]
   - pip install -e .[dev]
 script:
-  - echo '[pytest]' >> pytest.ini
-  - cd ..
-  - >
-    py.test
-    --ignore tangled.web/setup.py
-    --ignore tangled.web/docs
-    --ignore tangled.web/tangled/web/scaffolds
-    --doctest-modules
-    tangled.web/tangled/web
+  - nosetests
+  - sphinx-build -E docs docs/_build
