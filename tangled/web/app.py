@@ -21,6 +21,7 @@ from tangled.util import (
 )
 
 from . import abcs, representations
+from .const import ALL_HTTP_METHODS
 from .events import Subscriber, ApplicationCreated
 from .exc import DebugHTTPInternalServerError
 from .handlers import HandlerWrapper
@@ -32,11 +33,6 @@ from .static import LocalDirectory, RemoteDirectory
 
 
 log = logging.getLogger(__name__)
-
-
-# TODO: Move this
-ALL_HTTP_METHODS = (
-    'CONNECT', 'DELETE', 'GET', 'HEAD', 'POST', 'PUT', 'OPTIONS', 'TRACE')
 
 
 Registry = process_registry[ARegistry]

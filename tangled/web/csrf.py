@@ -8,6 +8,7 @@ from webob.exc import HTTPForbidden
 
 from tangled.util import constant_time_compare, random_string
 
+from .const import SAFE_HTTP_METHODS
 from .exc import ConfigurationError
 
 
@@ -17,7 +18,6 @@ log = logging.getLogger(__name__)
 KEY = '_csrf_token'
 HEADER = 'X-CSRFToken'
 TOKEN_LENGTH = 32
-SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS', 'TRACE')
 
 
 def include(app):
@@ -81,7 +81,7 @@ def csrf_tag(request):
 
 
 def csrf_handler(app, request, next_handler):
-    if request.method not in SAFE_METHODS:
+    if request.method not in SAFE_HTTP_METHODS:
         if request.resource_config.csrf_exempt:
             log.debug('CSRF: exempt: {}'.format(request.url))
         else:
