@@ -3,7 +3,6 @@ import logging
 import logging.config
 import pdb
 import re
-import traceback
 
 import venusian
 
@@ -23,7 +22,7 @@ from tangled.util import (
 from . import abcs, representations
 from .const import ALL_HTTP_METHODS
 from .events import Subscriber, ApplicationCreated
-from .exc import DebugHTTPInternalServerError
+from .exc import get_exc_log_message, DebugHTTPInternalServerError
 from .handlers import HandlerWrapper
 from .representations import Representation
 from .resource.config import Field as ConfigField, RepresentationArg
@@ -667,10 +666,8 @@ class Application(Registry):
 
     # WSGI Interface
 
-    @staticmethod
-    def log_exc(request, exc, logger=None):
-        message = ''.join(
-            traceback.format_exception(exc.__class__, exc, exc.__traceback__))
+    def log_exc(self, request, exc, logger=None):
+        message = get_exc_log_message(self, request, exc)
         if logger is None:
             logger = logging.getLogger('exc')
         logger.error(message)
@@ -687,7 +684,7 @@ class Application(Registry):
                 response = self._request_finished_handler(self, request)
             return response(request.environ, start_response)
         except Exception as exc:
-            error_message = traceback.format_exc()
+            error_message = get_exc_log_message(self, request, exc)
             if self.debug:
                 if self.settings.get('debug.pdb', False):
                     pdb.post_mortem(exc.__traceback__)
