@@ -28,7 +28,8 @@ class DebugHTTPInternalServerError(HTTPInternalServerError):
         self.body_template_obj.substitute = safe_substitue
 
 
-EXC_LOG_MESSAGE_TEMPLATE = """\
+EXC_LOG_MESSAGE_TEMPLATE = """
+
 Request URL: {url}
 
 Referrer: {referrer}
