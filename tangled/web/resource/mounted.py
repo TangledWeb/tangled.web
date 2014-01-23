@@ -21,10 +21,10 @@ class MountedResource:
     )
 
     def __init__(self, app, name, factory, path, methods=(), method_name=None,
-                 add_slash=False):
+                 add_slash=False, _level=4):
         self.app = app
         self.name = name
-        self.factory = load_object(factory, level=4)
+        self.factory = load_object(factory, level=_level)
         self.path = path
         self.methods = set(as_tuple(methods, sep=','))
         self.method_name = method_name
@@ -144,4 +144,4 @@ class MountedResource:
         factory = factory if factory is not None else self.factory
         methods = methods if methods is not None else self.methods
         return self.app.mount_resource(
-            name, factory, path, methods, method_name, add_slash)
+            name, factory, path, methods, method_name, add_slash, _level=5)
