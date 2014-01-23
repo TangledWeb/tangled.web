@@ -73,7 +73,7 @@ class Application(Registry):
     :func:`tangled.web.settings.parse_settings` to parse known settings
     as the types specified in
     :const:`tangled.web.settings.CONVERSION_MAP`. This also lets you use
-    the ``key:converter`` syntax with your settings.
+    the ``converter(key)`` syntax with your settings.
 
     Note that when a settings file is passed, it will *always* be
     parsed as described above.
@@ -84,11 +84,10 @@ class Application(Registry):
 
     **Logging:**
 
-    If settings are loaded from a config file and that config file (or
-    one of the config files it extends) contains logging config sections
-    (``formatters``, ``handlers``, ``loggers``), that logging
-    configuration will automatically be loaded via
-    ``logging.config.fileConfig``.
+    If settings are loaded from a file and that file (or one of the
+    files it extends) contains logging config sections (``formatters``,
+    ``handlers``, ``loggers``), that logging configuration will
+    automatically be loaded via ``logging.config.fileConfig``.
 
     """
 
@@ -164,14 +163,16 @@ class Application(Registry):
         self.notify_subscribers(ApplicationCreated, self)
 
     def on_created(self, func, priority=None, once=True, **args):
-        """Add an :class:`ApplicationCreated` subscriber.
+        """Add an :class:`~tangled.web.events.ApplicationCreated`
+        subscriber.
 
         Sets ``once`` to ``True`` by default since
-        ``ApplicationCreated`` is only emitted once per application.
+        :class:`~tangled.web.events.ApplicationCreated` is only emitted
+        once per application.
 
         This can be used as a decorator in the simple case where no
         args other than ``func`` need to be passed along to
-        :meth:`add_subscriber`.
+        :meth:`.add_subscriber`.
 
         """
         self.add_subscriber(ApplicationCreated, func, priority, once, **args)
@@ -206,12 +207,12 @@ class Application(Registry):
     parse_settings_file = staticmethod(parse_settings_file)
 
     def get_setting(self, key, default=NOT_SET):
-        """Get setting; return ``default`` *if* one is passed.
+        """Get a setting; return ``default`` *if* one is passed.
 
-        If ``key`` isn't in settings, try prepending 'tangled.app.'.
+        If ``key`` isn't in settings, try prepending ``'tangled.app.'``.
 
         If the ``key`` isn't present, return the ``default`` if one was
-        passed; if a ``default`` isn't passed, a KeyError will be
+        passed; if a ``default`` wasn't passed, a KeyError will be
         raised.
 
         """
@@ -227,11 +228,12 @@ class Application(Registry):
     def get_settings(self, settings=None, prefix='tangled.app.', **kwargs):
         """Get settings with names that start with ``prefix``.
 
-        This is front end for :func:`get_items_with_key_prefix` that
-        sets defaults for ``settings`` and ``prefix``.
+        This is a front end for
+        :func:`tangled.util.get_items_with_key_prefix` that sets
+        defaults for ``settings`` and ``prefix``.
 
         By default, this will get the settings from ``self.settings``
-        that have a 'tangled.app.' prefix.
+        that have a ``'tangled.app.'`` prefix.
 
         Alternate ``settings`` and/or ``prefix`` can be specified.
 
@@ -337,7 +339,7 @@ class Application(Registry):
         passed to :func:`load_object`.
 
         Helper functions can be methods that take a ``Helpers`` instance
-        as their first args or they can be static methods. The latter is
+        as their first arg or they can be static methods. The latter is
         useful for adding third party functions as helpers.
 
         Helper functions can be accessed via ``request.helpers``. The
@@ -359,11 +361,12 @@ class Application(Registry):
                        **args):
         """Add a subscriber for the specified event type.
 
-        Creates and registers an instance of :class:`Subscriber`.
-
         ``args`` will be passed to ``func`` as keyword args. (Note: this
         functionality is somewhat esoteric and should perhaps be
         removed.)
+
+        You can also use the :class:`~tangled.web.events.subscriber`
+        decorator to register subscribers.
 
         """
         event_type = load_object(event_type)
