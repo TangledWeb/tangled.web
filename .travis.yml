@@ -11,7 +11,7 @@ script:
     --ignore tangled.web/setup.py
     --ignore tangled.web/docs
     --ignore tangled.web/tangled/web/scaffolds
-    --cov tangled.web/tangled/web
+#    --cov tangled.web/tangled/web
     --doctest-modules
     tangled.web/tangled/web
 #  - sphinx-build -E ./tangled.web/docs docs
