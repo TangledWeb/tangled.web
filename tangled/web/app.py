@@ -503,10 +503,11 @@ class Application(Registry):
 
         """
         mounted_resource = MountedResource(
-            name, factory, path, methods=methods, method_name=method_name,
-            add_slash=add_slash)
+            self, name, factory, path, methods=methods,
+            method_name=method_name, add_slash=add_slash)
         self.register(
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
+        return mounted_resource
 
     def register_content_type(self, content_type, representation_type,
                               replace=False):

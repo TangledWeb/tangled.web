@@ -20,8 +20,9 @@ class MountedResource:
         '>'
     )
 
-    def __init__(self, name, factory, path, methods=(), method_name=None,
+    def __init__(self, app, name, factory, path, methods=(), method_name=None,
                  add_slash=False):
+        self.app = app
         self.name = name
         self.factory = load_object(factory, level=4)
         self.path = path
@@ -113,22 +114,34 @@ class MountedResource:
                     'Could not convert `{}` for URL var {}'.format(v, k))
         return self.format_string.format(**args)
 
-    def mount(self, name, factory, path):
-        """Mount subresource.
+    def mount(self, name, path, factory=None, methods=None, method_name=None,
+              add_slash=False):
+        """Mount a subresource.
 
         This can be used like this::
 
-            r = app.mount_resource(...)
-            r.mount(...)
+            r = app.mount_resource('parent', factory, '/parent')
+            r.mount('child', 'child')
 
         and like this::
 
-            with app.mount_resource(...) as r:
-                r.mount(...)
+            with app.mount_resource('parent', factory, '/parent') as r:
+                r.mount('child', 'child')
 
-        In either case, the subresource's path will be prepended with
-        its parent's path.
+        In either case, the subresource's ``name`` will be prepended
+        with its parent's name plus a slash, and its ``path`` will be
+        prepended with its parent's path plus a slash. If no ``factory``
+        is specified, the parent's factory will be used. ``methods``
+        will be propagated as well. ``method_name`` and ``add_slash``
+        are *not* propagated.
+
+        In the examples above, the child's name would be
+        ``parent/child`` and its path would be ``/parent/child``.
 
         """
+        name = posixpath.join(self.name, name)
         path = posixpath.join(self.path, path.lstrip('/'))
-        return self.container.mount(name, factory, path)
+        factory = factory if factory is not None else self.factory
+        methods = methods if methods is not None else self.methods
+        return self.app.mount_resource(
+            name, factory, path, methods, method_name, add_slash)
