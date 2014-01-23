@@ -445,7 +445,7 @@ class Application(Registry):
             registry.register(type_, arg, name)
 
     def mount_resource(self, name, factory, path, methods=(), method_name=None,
-                       add_slash=False, _level=4):
+                       add_slash=False, _level=3):
         """Mount a resource at the specified path.
 
         Basic example::
@@ -500,13 +500,36 @@ class Application(Registry):
         this means that named groups (``(?P<name>regex)``) can't be used
         (which would be pointless anyway), nor can "look behinds".
 
+        **Mounting Subresources**
+
+        Subresources can be mounted like this::
+
+            parent = app.mount_resource('parent', factory, '/parent')
+            parent.mount('child', 'child')
+
+        or like this::
+
+            with app.mount_resource('parent', factory, '/parent') as parent:
+                parent.mount('child', 'child')
+
+        In either case, the subresource's ``name`` will be prepended
+        with its parent's name plus a slash, and its ``path`` will be
+        prepended with its parent's path plus a slash. If no ``factory``
+        is specified, the parent's factory will be used. ``methods``
+        will be propagated as well. ``method_name`` and ``add_slash``
+        are *not* propagated.
+
+        In the examples above, the child's name would be
+        ``parent/child`` and its path would be ``/parent/child``.
+
         """
+        factory = load_object(factory, level=_level)
         mounted_resource = MountedResource(
-            self, name, factory, path, methods=methods,
-            method_name=method_name, add_slash=add_slash, _level=_level)
+            name, factory, path, methods=methods, method_name=method_name,
+            add_slash=add_slash)
         self.register(
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
-        return mounted_resource
+        return SubResourceMounter(self, mounted_resource)
 
     def register_content_type(self, content_type, representation_type,
                               replace=False):
@@ -698,3 +721,25 @@ class Application(Registry):
                 self.log_exc(request, exc)
             finally:
                 return response(environ, start_response)
+
+
+class SubResourceMounter:
+
+    def __init__(self, app, parent):
+        self.app = app
+        self.parent = parent
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_traceback):
+        return False
+
+    def mount(self, name, path, factory=None, methods=None, method_name=None,
+              add_slash=False):
+        name = '/'.join((self.parent.name, name))
+        path = '/'.join((self.parent.path, path.lstrip('/')))
+        factory = factory if factory is not None else self.parent.factory
+        methods = methods if methods is not None else self.parent.methods
+        return self.app.mount_resource(
+            name, factory, path, methods, method_name, add_slash, _level=4)

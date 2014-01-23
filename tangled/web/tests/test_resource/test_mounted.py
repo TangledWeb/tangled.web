@@ -12,7 +12,7 @@ class TestMountedResouce(unittest.TestCase):
 
     def test_path_parsing(self):
         path = '/<path><name:[a-z]{3}>/<(int)id:\d+>.<format:[a-z]+>;extra'
-        mr = MountedResource(self.app, 'test', None, path)
+        mr = MountedResource('test', None, path)
 
         info = mr.urlvars_info
         self.assertEqual(info['path'], {'regex': '[\w-]+', 'converter': str})
@@ -25,26 +25,26 @@ class TestMountedResouce(unittest.TestCase):
 
     def test_format_path(self):
         path = '/<path><name:[a-z]{3}>/<(int)id:\d+>.<format:[a-z]+>;extra'
-        mr = MountedResource(self.app, 'test', None, path)
+        mr = MountedResource('test', None, path)
         self.assertEqual(
             mr.format_path(path='somewhere', name='bob', id=13, format='json'),
             '/somewherebob/13.json;extra')
 
     def test_format_path_unknown_var(self):
         path = '/<path><name:[a-z]{3}>/<(int)id:\d+>.<format:[a-z]+>;extra'
-        mr = MountedResource(self.app, 'test', None, path)
+        mr = MountedResource('test', None, path)
         with self.assertRaises(ValueError):
             mr.format_path(pat='somewhere', name='bob', id=13, format='json')
 
     def test_format_path_bad_value(self):
         path = '/<path><name:[a-z]{3}>/<(int)id:\d+>.<format:[a-z]+>;extra'
-        mr = MountedResource(self.app, 'test', None, path)
+        mr = MountedResource('test', None, path)
         with self.assertRaises(ValueError):
             mr.format_path(path='somewhere', name='bob', id='x', format='json')
 
     def test_add_slash(self):
         path = '/some/dir/'
-        mr = MountedResource(self.app, 'test', None, path)
+        mr = MountedResource('test', None, path)
         self.assertTrue(mr.add_slash)
         self.assert_(mr.match('GET', '/some/dir/'))
         self.assert_(mr.match('GET', '/some/dir'))
