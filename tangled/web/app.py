@@ -588,10 +588,10 @@ class Application(Registry):
                   to generate static URLs.
 
         """
+        prefix = tuple(prefix.strip('/').split('/'))
         if remote or re.match(r'https?://', directory):
             directory = RemoteDirectory(directory)
         else:
-            prefix = tuple(prefix.strip('/').split('/'))
             directory = abs_path(directory)
             directory = LocalDirectory(directory, index_page=index_page)
         self.register('static_directory', directory, prefix)
