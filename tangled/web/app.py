@@ -149,8 +149,8 @@ class Application(Registry):
         # TODO: Not sure this belongs here
         self._configure_logging()
 
-        name = self.get_setting('name') or id(self)
-        process_registry.register(abcs.AApplication, self, name)
+        self.name = self.get_setting('name') or 'id={}'.format(id(self))
+        process_registry.register(abcs.AApplication, self, self.name)
 
         for subscriber in self.get_setting('on_created'):
             self.on_created(subscriber)
@@ -721,6 +721,9 @@ class Application(Registry):
                 self.log_exc(request, exc)
             finally:
                 return response(environ, start_response)
+
+    def __repr__(self):
+        return '<Tangled Application {}>'.format(self.name)
 
 
 class SubResourceMounter:
