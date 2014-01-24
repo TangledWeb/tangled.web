@@ -31,8 +31,15 @@ class DebugHTTPInternalServerError(HTTPInternalServerError):
 EXC_LOG_MESSAGE_TEMPLATE = """
 
 Request URL: {url}
-
 Referrer: {referrer}
+
+Headers
+=======
+
+{headers}
+
+Traceback
+=========
 
 {traceback}
 \
@@ -46,9 +53,15 @@ def get_exc_log_message(app, request, exc):
         if request is None:
             message += 'Request failed hard\n' + message
     else:
+        headers = []
+        for k in sorted(request.headers):
+            v = request.headers[k]
+            headers.append('{}: {}'.format(k, v))
+        headers = '\n'.join(headers)
         message = EXC_LOG_MESSAGE_TEMPLATE.format(
             url=request.url,
             referrer=request.referer,
+            headers=headers,
             traceback=message,
         )
     return message
