@@ -69,7 +69,7 @@ def exc_handler(app, request, next_handler):
                 try:
                     return main(app, request, None)
                 except WSGIHTTPException as exc:
-                    app.log_exc(exc)
+                    app.log_exc(request, exc)
                     return exc
     except Exception as exc:
         app.log_exc(request, exc)
