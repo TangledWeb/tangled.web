@@ -63,11 +63,13 @@ def exc_handler(app, request, next_handler):
                 resource = error_resource(app, request)
                 request.method = 'GET'
                 request.resource = resource
+                request.resource_method = 'GET'
                 request.response = response
                 del request.resource_config
                 try:
                     return main(app, request, None)
                 except WSGIHTTPException as exc:
+                    app.log_exc(exc)
                     return exc
     except Exception as exc:
         app.log_exc(request, exc)
