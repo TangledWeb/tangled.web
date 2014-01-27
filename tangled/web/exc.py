@@ -1,5 +1,6 @@
 import datetime
 import html
+import logging.handlers
 import traceback
 
 from webob.exc import HTTPInternalServerError
@@ -30,8 +31,9 @@ class DebugHTTPInternalServerError(HTTPInternalServerError):
 
 EXC_LOG_MESSAGE_TEMPLATE = """
 
-Request URL: {url}
-Referrer: {referrer}
+{request.method} {request.url}
+Requested by {request.remote_addr}
+Referred by {request.referer}
 
 Headers
 =======
@@ -41,8 +43,6 @@ Headers
 Traceback
 =========
 
-{traceback}
-\
 """
 
 
@@ -53,15 +53,28 @@ def get_exc_log_message(app, request, exc):
         if request is None:
             message += 'Request failed hard\n' + message
     else:
-        headers = []
-        for k in sorted(request.headers):
-            v = request.headers[k]
-            headers.append('{}: {}'.format(k, v))
-        headers = '\n'.join(headers)
         message = EXC_LOG_MESSAGE_TEMPLATE.format(
-            url=request.url,
-            referrer=request.referer,
-            headers=headers,
-            traceback=message,
+            request=request,
+            headers=format_dict(request.headers, exclude=('Cookie',)),
         )
     return message
+
+
+def format_dict(dict_, include=(), exclude=()):
+    out = []
+    if include:
+        keys = set(include)
+    else:
+        keys = set(dict_.keys())
+        keys -= set(exclude)
+    for k in sorted(keys):
+        v = dict_.get(k, '[NOT PRESENT]')
+        out.append('{}: {}'.format(k, v))
+    out = '\n'.join(out)
+    return out
+
+
+class SMTPHandler(logging.handlers.SMTPHandler):
+
+    def getSubject(self, record):
+        return '{0.subject} {1}'.format(self, record.exc_info[1])

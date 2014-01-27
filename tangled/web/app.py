@@ -693,7 +693,8 @@ class Application(Registry):
         message = get_exc_log_message(self, request, exc)
         if logger is None:
             logger = logging.getLogger('exc')
-        logger.error(message)
+        exc_info = exc.__class__, exc, exc.__traceback__
+        logger.error(message, exc_info=exc_info)
 
     def __call__(self, environ, start_response):
         request = None
