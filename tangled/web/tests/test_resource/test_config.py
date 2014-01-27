@@ -2,31 +2,43 @@ import unittest
 
 import venusian
 
-from tangled.web import Application, config
+from tangled.web import Application, config as config
 from tangled.web import Resource as BaseResource
 from tangled.web.resource.config import Config
+
 
 
 class TestConfig(unittest.TestCase):
 
     def setUp(self):
-        config.callbacks = []
         self.app = Application({})
+
+        class _config(config):
+
+            _callbacks = set()
+
+            def __call__(self, wrapped):
+                value = super().__call__(wrapped)
+                for v in value.__venusian_callbacks__['tangled']:
+                    self._callbacks.add(v[0])
+                return value
+
+        self.config = _config
 
     def _scan(self, cls):
         scanner = venusian.Scanner(app=self.app)
-        for callback in config.callbacks:
+        for callback in self.config._callbacks:
             callback(scanner, cls.__name__, cls)
 
     def test_no_args_raises_TypeError(self):
         with self.assertRaises(TypeError):
-            config('*/*')(type('Resource', (), {}))
+            self.config('*/*')(type('Resource', (), {}))
 
     def test_no_defaults(self):
 
         class Resource(BaseResource):
 
-            @config('text/html', status=303)
+            @self.config('text/html', status=303)
             def GET(self):
                 pass
 
@@ -41,7 +53,7 @@ class TestConfig(unittest.TestCase):
 
     def test_defaults(self):
 
-        @config('*/*', status=303)
+        @self.config('*/*', status=303)
         class Resource(BaseResource):
 
             def GET(self):
@@ -57,15 +69,15 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(info.representation_args, {})
 
     def test_override_defaults(self):
-        @config(
+        @self.config(
             '*/*', type='no_content', status=301,
             response_attrs={'status': 204})
         class Resource(BaseResource):
 
-            @config('*/*', status=302)
-            @config(
+            @self.config('*/*', status=302)
+            @self.config(
                 'application/json', status=303, response_attrs={'x': 'x'})
-            @config('text/html', type=None, response_attrs={})
+            @self.config('text/html', type=None, response_attrs={})
             def GET(self):
                 pass
 
@@ -94,10 +106,10 @@ class TestConfig(unittest.TestCase):
                 pass
 
         with self.assertRaises(TypeError):
-            self._scan(config('*/*', xxx=True)(Resource))
+            self._scan(self.config('*/*', xxx=True)(Resource))
 
         self.app.add_config_field('*/*', 'xxx', False)
-        self._scan(config('*/*', xxx=True)(Resource))
+        self._scan(self.config('*/*', xxx=True)(Resource))
 
         resource = Resource(None, None)
         info = Config.for_resource(self.app, resource, 'GET', 'text/html')

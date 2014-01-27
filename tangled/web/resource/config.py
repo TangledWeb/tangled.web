@@ -34,8 +34,6 @@ class config:
 
     """
 
-    callbacks = []  # For tests
-
     def __init__(self, content_type, **kwargs):
         self.content_type = content_type
         if 'redirect' in kwargs:
@@ -66,7 +64,6 @@ class config:
             else:
                 app.register(config, self.kwargs, differentiator)
         venusian.attach(wrapped, venusian_callback, category='tangled')
-        self.__class__.callbacks.append(venusian_callback)
         return wrapped
 
 
