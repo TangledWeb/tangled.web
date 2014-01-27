@@ -1,5 +1,5 @@
 from collections import namedtuple
-from copy import copy
+from copy import deepcopy
 
 import venusian
 
@@ -82,6 +82,7 @@ class Config:
         self.request_method = request_method
         self.content_type = content_type
         self.representation_args = {}
+        kwargs = deepcopy(kwargs)
 
         all_fields = set()
         all_args = set()
@@ -99,7 +100,7 @@ class Config:
                         if callable(default):
                             default = default()
                         else:
-                            default = copy(default)
+                            default = deepcopy(default)
                         setattr(self, field.name, default)
 
         set_default_fields(app.get(Field, (request_method, '*/*')))
@@ -119,7 +120,7 @@ class Config:
                         if callable(default):
                             default = default()
                         else:
-                            default = copy(default)
+                            default = deepcopy(default)
                         self.representation_args[name] = default
 
         set_default_args(app.get(RepresentationArg, (request_method, '*/*')))
@@ -128,7 +129,6 @@ class Config:
                 app.get(RepresentationArg, (request_method, content_type)))
 
         for name, value in kwargs.items():
-            value = copy(value)
             if name in all_fields:
                 setattr(self, name, value)
             elif name in all_args:
