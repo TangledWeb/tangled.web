@@ -165,12 +165,12 @@ class Config:
         resource_method = getattr(resource_cls, resource_method)
         cls_name = fully_qualified_name(resource_cls)
         meth_name = fully_qualified_name(resource_method)
-        data = (
-            app.get(config, (cls_name, '*/*')),
-            app.get(config, (cls_name, content_type)),
-            app.get(config, (meth_name, '*/*')),
-            app.get(config, (meth_name, content_type)),
-        )
+        data = [app.get(config, (cls_name, '*/*'))]
+        if content_type != '*/*':
+            data.append(app.get(config, (cls_name, content_type)))
+        data.append(app.get(config, (meth_name, '*/*')))
+        if content_type != '*/*':
+            data.append(app.get(config, (meth_name, content_type)))
         kwargs = {}
         for d in data:
             if d:
