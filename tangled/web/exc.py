@@ -40,6 +40,11 @@ Headers
 
 {headers}
 
+Resource Config
+===============
+
+{resource_config}
+
 Traceback
 =========
 
@@ -53,8 +58,13 @@ def get_exc_log_message(app, request, exc):
         if request is None:
             message += 'Request failed hard\n' + message
     else:
+        try:
+            resource_config = format_dict(request.resource_config)
+        except Exception as exc:
+            resource_config = str(exc)
         message = EXC_LOG_MESSAGE_TEMPLATE.format(
             request=request,
+            resource_config=resource_config,
             headers=format_dict(request.headers, exclude=('Cookie',)),
         )
     return message
