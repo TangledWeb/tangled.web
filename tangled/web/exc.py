@@ -59,7 +59,7 @@ def get_exc_log_message(app, request, exc):
             message += 'Request failed hard\n' + message
     else:
         try:
-            resource_config = format_dict(request.resource_config)
+            resource_config = format_dict(request.resource_config.__dict__)
         except Exception as exc:
             resource_config = str(exc)
         message = EXC_LOG_MESSAGE_TEMPLATE.format(
