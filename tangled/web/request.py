@@ -1,6 +1,5 @@
 import logging
 import posixpath
-import traceback
 from urllib.parse import quote, quote_plus, urlencode, urlparse
 
 from webob import BaseRequest
@@ -9,6 +8,7 @@ from webob.exc import status_map, WSGIHTTPException
 from tangled.decorators import reify, cached_property
 
 from .abcs import AHelpers, AMountedResource, ARequest, AResponse
+from .exc import format_exc
 from .resource.config import Config
 from .static import RemoteDirectory
 
@@ -361,8 +361,5 @@ class RequestFinishedException(Exception):
             '{} exception{} occurred in finished callbacks\n'
             .format(num_exceptions, s)]
         for i, exc in enumerate(self.exceptions, 1):
-            tb = traceback.format_exception(
-                exc.__class__, exc, exc.__traceback__)
-            tb = ''.join(tb)
-            message.append('{}. {}'.format(i, tb))
+            message.append('{}. {}'.format(i, format_exc(exc)))
         return '\n'.join(message)

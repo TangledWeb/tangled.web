@@ -52,9 +52,8 @@ Traceback
 
 
 def get_exc_log_message(app, request, exc):
-    message = ''.join(
-        traceback.format_exception(exc.__class__, exc, exc.__traceback__))
     if app.debug or request is None:
+        message = format_exc(exc)
         if request is None:
             message += 'Request failed hard\n' + message
     else:
@@ -71,6 +70,18 @@ def get_exc_log_message(app, request, exc):
             headers=format_dict(request.headers, exclude=('Cookie',)),
         )
     return message
+
+
+def format_exc(exc, **kwargs):
+    """Like the built in version but let's ``exc`` be specified.
+
+    The built in version in ``traceback.format_exc`` always gets exc
+    info from ``sys.exc_info()`` with no way to specify otherwise.
+
+    """
+    return ''.join(
+        traceback.format_exception(exc.__class__, exc, exc.__traceback__),
+        **kwargs)
 
 
 def format_dict(dict_, include=(), exclude=()):
