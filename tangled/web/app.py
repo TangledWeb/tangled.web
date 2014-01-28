@@ -544,12 +544,14 @@ class Application(Registry):
         representation_type = load_object(representation_type)
         key = representation_type.key
         content_type = representation_type.content_type
+        quality = representation_type.quality
         self.register(
             Representation, representation_type, key, replace=replace)
         self.register(
             Representation, representation_type, content_type, replace=replace)
         self.register(
-            'content_type', content_type, content_type, replace=replace)
+            'content_type', (content_type, quality), content_type,
+            replace=replace)
 
     def add_request_attribute(self, attr, name=None, decorator=None,
                               reify=False):

@@ -10,6 +10,7 @@ from .events import TemplateContextCreated
 class Representation(metaclass=ABCMeta):
 
     encoding = 'utf-8'
+    quality = 0.5
 
     def __init__(self, app, request, data, encoding=None):
         self.app = app
@@ -70,6 +71,7 @@ class HTMLRepresentation(Representation):
     key = 'html'
     content_type = 'text/html'
     data_type = str
+    quality = 1.0
 
     @property
     def content(self):
