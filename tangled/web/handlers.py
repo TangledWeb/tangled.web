@@ -34,6 +34,7 @@ from . import csrf
 from .abcs import AMountedResource
 from .events import NewRequest, ResourceFound, NewResponse
 from .exc import DebugHTTPInternalServerError
+from .representations import Representation
 from .response import Response
 
 
@@ -245,13 +246,13 @@ def main(app, request, _):
     info = request.resource_config
 
     if info.type:
-        type_ = app.get('representation_lookup', info.type)
+        differentiator = info.type
     else:
-        content_type = request.response_content_type
-        type_ = app.get_required(content_type)
+        differentiator = request.response_content_type
+    repr_type = app.get_required(Representation, differentiator)
 
     kwargs = info.representation_args
-    representation = type_(app, request, data, **kwargs)
+    representation = repr_type(app, request, data, **kwargs)
 
     if isinstance(representation.content, Response):
         return representation.content

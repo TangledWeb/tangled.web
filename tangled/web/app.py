@@ -108,7 +108,7 @@ class Application(Registry):
                 issubclass(obj, Representation) and
                 obj is not Representation)
             if is_representation_type:
-                self.register_content_type(obj.content_type, obj)
+                self.register_representation_type(obj)
 
         self.add_config_field('*/*', 'type', None)
         self.add_config_field('*/*', 'status', None)
@@ -531,28 +531,25 @@ class Application(Registry):
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
         return SubResourceMounter(self, mounted_resource)
 
-    def register_content_type(self, content_type, representation_type,
-                              replace=False):
+    def register_representation_type(self, representation_type, replace=False):
         """Register a content type.
 
-        This does a few things. First, it registers the ``content_type``
-        as being available. Second, it makes the ``representation_type``
-        the preferred representation type for the content type. Third,
-        it makes the representation type accessible via its ``key`` (and
-        it arguably should *not* do this last bit here).
+        This does a few things:
+
+        - Makes the representation type accessible via its key
+        - Makes the representation type accessible via its content type
+        - Registers the representation's content type
 
         """
         representation_type = load_object(representation_type)
         key = representation_type.key
+        content_type = representation_type.content_type
+        self.register(
+            Representation, representation_type, key, replace=replace)
+        self.register(
+            Representation, representation_type, content_type, replace=replace)
         self.register(
             'content_type', content_type, content_type, replace=replace)
-        self.register(content_type, representation_type, replace=replace)
-        self.register(
-            'representation_lookup', representation_type, representation_type,
-            replace=replace)
-        self.register(
-            'representation_lookup', representation_type, key,
-            replace=replace)
 
     def add_request_attribute(self, attr, name=None, decorator=None,
                               reify=False):
