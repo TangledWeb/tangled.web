@@ -2,10 +2,9 @@ import unittest
 
 import venusian
 
-from tangled.web import Application, config as config
+from tangled.web import Application, config
 from tangled.web import Resource as BaseResource
 from tangled.web.resource.config import Config
-
 
 
 class TestConfig(unittest.TestCase):

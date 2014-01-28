@@ -126,10 +126,12 @@ class Application(Registry):
         # application will specify static directories and resources this
         # way.
         for arg_spec in self.get_setting('static_directories'):
-            self.mount_static_directory(*arg_spec['args'], **arg_spec['kwargs'])
+            args, kwargs = arg_spec['args'], arg_spec['kwargs']
+            self.mount_static_directory(*args, **kwargs)
 
         for arg_spec in self.get_setting('resources'):
-            self.mount_resource(*arg_spec['args'], **arg_spec['kwargs'])
+            args, kwargs = arg_spec['args'], arg_spec['kwargs']
+            self.mount_resource(*args, **kwargs)
 
         # Before scan
         if self.get_setting('csrf.enabled'):
