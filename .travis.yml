@@ -6,4 +6,6 @@ install:
   - git clone git://github.com/TangledWeb/tangled ../tangled
   - buildout
 script:
+  - ls ./bin
   - ./bin/tangled test
+  - ./bin/sphinx-build -E docs docs/_build
