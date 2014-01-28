@@ -2,7 +2,9 @@ language: python
 python:
   - "3.3"
 install:
-  - pip install git+git://github.com/TangledWeb/tangled.git#egg=tangled[dev]
-  - pip install -e .[dev]
+  - pip install zc.buildout
+  - git clone git://github.com/TangledWeb/tangled ../tangled
+  - buildout
 script:
-  - nosetests
+  - ./bin/tangled test
+  - ./bin/nosetests
