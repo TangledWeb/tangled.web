@@ -7,4 +7,3 @@ install:
   - buildout
 script:
   - ./bin/tangled test
-  - ./bin/nosetests
