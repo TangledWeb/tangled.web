@@ -716,7 +716,8 @@ class Application(Registry):
             else:
                 # Attempt to ensure this exception is logged (i.e., if
                 # the exc logger is broken for some reason).
-                log.critical(error_message)
+                exc_info = exc.__class__, exc, exc.__traceback__
+                log.critical(error_message, exc_info=exc_info)
                 response = HTTPInternalServerError()
             try:
                 self.log_exc(request, exc)
