@@ -1,5 +1,6 @@
 from collections import namedtuple
 from copy import deepcopy
+from itertools import chain
 
 import venusian
 
@@ -76,64 +77,40 @@ RepresentationArg = type('RepresentationArg', (ConfigArg,), {})
 class Config:
 
     def __init__(self, app, request_method, content_type, **kwargs):
-        self.request_method = request_method
-        self.content_type = content_type
-        self.representation_args = {}
+        self.__dict__['request_method'] = request_method
+        self.__dict__['content_type'] = content_type
+        self.__dict__['representation_args'] = {}
+
+        def _get_args(arg_type):
+            all_items = []
+            items = app.get(arg_type, (request_method, '*/*'))
+            if items:
+                all_items.extend(items.values())
+            if content_type != '*/*':
+                items = app.get(arg_type, (request_method, content_type))
+                if items:
+                    all_items.extend(items.values())
+            return all_items
+
+        _fields = _get_args(Field)
+        _args = _get_args(RepresentationArg)
+
+        self._field_names = set(f.name for f in _fields)
+        self._arg_names = set(a.name for a in _args)
+
         kwargs = deepcopy(kwargs)
 
-        all_fields = set()
-        all_args = set()
-
-        def set_default_fields(fields):
-            if fields:
-                for field in fields.values():
-                    name = field.name
-                    all_fields.add(name)
-                    if field.required:
-                        if name not in kwargs:
-                            raise TypeError
-                    else:
-                        default = field.default
-                        if callable(default):
-                            default = default()
-                        else:
-                            default = deepcopy(default)
-                        setattr(self, field.name, default)
-
-        set_default_fields(app.get(Field, (request_method, '*/*')))
-        if content_type != '*/*':
-            set_default_fields(app.get(Field, (request_method, content_type)))
-
-        def set_default_args(args):
-            if args:
-                for arg in args.values():
-                    name = arg.name
-                    all_args.add(name)
-                    if arg.required:
-                        if name not in kwargs:
-                            raise TypeError
-                    else:
-                        default = arg.default
-                        if callable(default):
-                            default = default()
-                        else:
-                            default = deepcopy(default)
-                        self.representation_args[name] = default
-
-        set_default_args(app.get(RepresentationArg, (request_method, '*/*')))
-        if content_type != '*/*':
-            set_default_args(
-                app.get(RepresentationArg, (request_method, content_type)))
+        for config_arg in chain(_fields, _args):
+            name = config_arg.name
+            if config_arg.required and name not in kwargs:
+                raise TypeError('Missing resource config arg: {}'.format(name))
+            else:
+                default = config_arg.default
+                default = default() if callable(default) else deepcopy(default)
+                setattr(self, name, default)
 
         for name, value in kwargs.items():
-            if name in all_fields:
-                setattr(self, name, value)
-            elif name in all_args:
-                self.representation_args[name] = value
-            else:
-                raise TypeError(
-                    'Unknown @config arg for {} {}: {}'
-                    .format(request_method, content_type, name))
+            setattr(self, name, value)
 
     @classmethod
     def for_resource(cls, app, resource, request_method, content_type,
@@ -173,3 +150,12 @@ class Config:
             if d:
                 kwargs.update(d)
         return cls(app, request_method, content_type, **kwargs)
+
+    def __setattr__(self, name, value):
+        if name.startswith('_') or name in self._field_names:
+            super().__setattr__(name, value)
+        elif name in self._arg_names:
+            self.representation_args[name] = value
+        else:
+            raise TypeError(
+                "can't set {} on {}".format(name, self.__class__))
