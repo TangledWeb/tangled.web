@@ -215,9 +215,10 @@ def main(app, request, _):
     :class:`Response`), that response will be returned without further
     processing.
 
-    If the status of `request.response` has been set to 3xx (either via
-    @config or in the body of the resource method), the response will
-    will be returned as is without further processing.
+    If the status of ``request.response`` has been set to 3xx (either
+    via @config or in the body of the resource method) AND the resource
+    method returns no data, the response will will be returned as is
+    without further processing.
 
     Otherwise, a representation will be generated based on the request's
     Accept header (unless a representation type has been set via
@@ -240,7 +241,7 @@ def main(app, request, _):
 
     response = request.response
 
-    if 300 <= response.status_code < 400:
+    if 300 <= response.status_code < 400 and data is None:
         return response
 
     info = request.resource_config
