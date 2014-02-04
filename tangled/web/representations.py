@@ -87,7 +87,18 @@ class JSONRepresentation(Representation):
     @property
     def content(self):
         # TODO: Prepend 'while(1);' (if set)?
-        return json.dumps(self.data)
+        encoder_cls = self.app.get_setting('representation.json.encoder')
+        default = self.app.get_setting('representation.json.encoder.default')
+        if encoder_cls is not None or default is not None:
+            return json.dumps(self.data, cls=encoder_cls, default=default)
+        else:
+            return json.dumps(self.data, default=self.default)
+
+    @staticmethod
+    def default(o):
+        if hasattr(o, '__json_data__'):
+            return o.__json_data__()
+        raise TypeError('{!r} is not JSON serializable'.format(o))
 
 
 class TemplateMixin:

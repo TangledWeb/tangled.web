@@ -15,6 +15,8 @@ CONVERSION_MAP = {
     'tangled.app.handlers': 'list',
     'tangled.app.includes': 'list',
     'tangled.app.on_created': 'list_of_objects',
+    'tangled.app.representation.json.encoder': 'object',
+    'tangled.app.representation.json.encoder.default': 'object',
     'tangled.app.request_factory': 'object',
     'tangled.app.response_factory': 'object',
     'tangled.app.resources': as_args(None, None, None, None, 'bool'),
