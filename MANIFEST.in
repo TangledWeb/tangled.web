@@ -1,0 +1,6 @@
+include CHANGELOG
+include LICENSE
+include buildout.cfg
+include shell.ini
+include tangled/web/defaults.ini
+recursive-include examples
