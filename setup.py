@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tangled.web',
-    version='0.1.dev0',
+    version='0.1a1',
     description='RESTful Web Framework',
     long_description=open('README.rst').read(),
     packages=find_packages(),
