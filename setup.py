@@ -6,6 +6,9 @@ setup(
     version='0.1a2.dev0',
     description='RESTful Web Framework',
     long_description=open('README.rst').read(),
+    url='http://tangledframework.org/',
+    author='Wyatt Baldwin',
+    author_email='self@wyattbaldwin.com',
     packages=find_packages(),
     install_requires=(
         'tangled>=0.1.dev0',
