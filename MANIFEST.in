@@ -3,4 +3,5 @@ include LICENSE
 include buildout.cfg
 include shell.ini
 include tangled/web/defaults.ini
-recursive-include examples *
+recursive-include examples *.py *.ini
+recursive-include tangled/web/scaffolds/* *.py *.ini

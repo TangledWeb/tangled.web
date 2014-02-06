@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 setup(
@@ -9,18 +9,24 @@ setup(
     url='http://tangledframework.org/',
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
-    packages=find_packages(),
-    install_requires=(
+    packages=[
+        'tangled.web',
+        'tangled.web.resource',
+        'tangled.web.scaffolds',
+        'tangled.web.scripts',
+        'tangled.web.tests'
+    ],
+    install_requires=[
         'tangled>=0.1.dev0',
         'MarkupSafe>=0.18',
         'venusian>=1.0a8',
         'WebOb>=1.3.1',
         'zc.recipe.egg',
-    ),
+    ],
     extras_require={
-        'dev': (
+        'dev': [
             'tangled[dev]',
-        ),
+        ],
     },
     entry_points="""
     [tangled.scripts]
@@ -35,11 +41,11 @@ setup(
     wsgi_application = tangled.web.recipes:WSGIApplication
 
     """,
-    classifiers=(
+    classifiers=[
         'Development Status :: 1 - Planning',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
-    ),
+    ],
 )
