@@ -1,6 +1,9 @@
 Tangled.Web
 +++++++++++
 
+.. image:: https://travis-ci.org/TangledWeb/tangled.mako.png?branch=master
+   :target: https://travis-ci.org/TangledWeb/tangled.mako
+
 Tangled.Web is a somewhat opinionated, resource oriented Web framework. It
 might be considered a "micro" framework because it simply provides a way to map
 HTTP requests to resources and has no opinions regarding databases, templating,
