@@ -17,6 +17,7 @@ setup(
         'tangled.web.scripts',
         'tangled.web.tests'
     ],
+    include_package_data=True,
     install_requires=[
         'tangled>=0.1.dev0',
         'MarkupSafe>=0.18',
