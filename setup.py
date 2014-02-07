@@ -10,6 +10,7 @@ setup(
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
     packages=[
+        'tangled',
         'tangled.web',
         'tangled.web.resource',
         'tangled.web.scaffolds',
