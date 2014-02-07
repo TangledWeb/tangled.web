@@ -1,7 +1,10 @@
-0.1a4 (unreleased)
+0.1a4 (2014-02-06)
 ==================
 
-- No changes yet
+- Include tangled in packages list. Not sure this is strictly necessary, but
+  it's more correct in the sense that a namespace package may include Python
+  modules.
+- Include package data (ensure defaults.ini and scaffolds get installed).
 
 
 0.1a3 (2014-02-06)
