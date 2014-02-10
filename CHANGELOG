@@ -1,7 +1,18 @@
-0.1a5 (unreleased)
+0.1a5 (2014-02-09)
 ==================
 
-- No changes yet
+- Fix more packaging issues
+
+  - Include package data (i.e., include scaffolds)
+  - Add .template extension to .py files in basic scaffold that use ${var}s
+
+- Require released version of tangled 0.1a5 or newer
+
+- Update trove classifiers
+
+  - Declare package to be Alpha status
+  - Declare support for Python 3.3 and 3.4 specifically (instead of generic
+    Python 3)
 
 
 0.1a4 (2014-02-06)
