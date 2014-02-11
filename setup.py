@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='tangled.web',
-    version='0.1a6',
+    version='0.1a7.dev0',
     description='RESTful Web Framework',
     long_description=open('README.rst').read(),
     url='http://tangledframework.org/',
