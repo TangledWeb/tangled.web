@@ -13,15 +13,14 @@ for path in reversed(SYS_PATHS):
     if path not in sys.path:
         sys.path[0:0] = [path]
 
-from tangled.web import Application
+from tangled.util import load_object
 
+FACTORY = load_object('{factory}')
 SETTINGS_FILE = '{settings_file}'
-
 PARSE_SETTINGS = {parse_settings}
-
 EXTRA_SETTINGS = {{{extra_settings}}}
 {initialization}
-application = Application(
+application = FACTORY(
     SETTINGS_FILE,
     parse_settings=PARSE_SETTINGS,
     extra_settings=EXTRA_SETTINGS,
@@ -40,6 +39,9 @@ class WSGIApplication(object):
         if 'eggs' not in options:
             raise zc.buildout.UserError(
                 'You must specify one or more eggs using the `eggs` option')
+
+        if 'app-factory' not in options:
+            options['app-factory'] = 'tangled.web:Application'
 
         if 'settings-file' not in options:
             raise zc.buildout.UserError(
@@ -61,8 +63,8 @@ class WSGIApplication(object):
             include = (
                 (k not in self.buildout['buildout']) and
                 (k not in (
-                    '_d', '_e', 'recipe', 'eggs', 'settings-file',
-                    'initialization'))
+                    '_d', '_e', 'recipe', 'eggs', 'app-factory',
+                    'settings-file', 'initialization'))
             )
             if include:
                 extra_settings[k] = v
@@ -80,6 +82,7 @@ class WSGIApplication(object):
 
         contents = TEMPLATE.format(
             sys_paths=sys_paths,
+            factory=self.options['app-factory'],
             settings_file=self.options['settings-file'],
             parse_settings=self.options.get('parse-settings', True),
             extra_settings=extra_settings,
