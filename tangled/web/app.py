@@ -22,7 +22,7 @@ from tangled.util import (
 from . import abcs, representations
 from .const import ALL_HTTP_METHODS
 from .events import Subscriber, ApplicationCreated
-from .exc import get_exc_log_message, DebugHTTPInternalServerError
+from .exc import DebugHTTPInternalServerError
 from .handlers import HandlerWrapper
 from .representations import Representation
 from .resource.config import Field as ConfigField, RepresentationArg
@@ -199,6 +199,10 @@ class Application(Registry):
     def debug(self):
         """Wraps ``self.settings['debug'] merely for convenience."""
         return self.settings['debug']
+
+    @reify
+    def exc_log_message_factory(self):
+        return self.get_setting('exc_log_message_factory')
 
     parse_settings = staticmethod(parse_settings)
     parse_settings_file = staticmethod(parse_settings_file)
@@ -691,7 +695,7 @@ class Application(Registry):
     # WSGI Interface
 
     def log_exc(self, request, exc, logger=None):
-        message = get_exc_log_message(self, request, exc)
+        message = self.exc_log_message_factory(self, request, exc)
         if logger is None:
             logger = logging.getLogger('exc')
         exc_info = exc.__class__, exc, exc.__traceback__
@@ -709,7 +713,7 @@ class Application(Registry):
                 response = self._request_finished_handler(self, request)
             return response(request.environ, start_response)
         except Exception as exc:
-            error_message = get_exc_log_message(self, request, exc)
+            error_message = self.exc_log_message_factory(self, request, exc)
             if self.debug:
                 if self.settings.get('debug.pdb', False):
                     pdb.post_mortem(exc.__traceback__)

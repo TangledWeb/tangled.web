@@ -12,6 +12,7 @@ CONVERSION_MAP = {
     'debug.pdb': 'bool',
     'tangled.app.csrf.enabled': 'bool',
     'tangled.app.error_resource': 'object',
+    'tangled.app.exc_log_message_factory': 'object',
     'tangled.app.handlers': 'list',
     'tangled.app.includes': 'list',
     'tangled.app.on_created': 'list_of_objects',
