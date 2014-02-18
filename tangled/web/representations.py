@@ -1,3 +1,4 @@
+import datetime
 import html
 import json
 from abc import ABCMeta, abstractmethod
@@ -98,6 +99,8 @@ class JSONRepresentation(Representation):
     def default(o):
         if hasattr(o, '__json_data__'):
             return o.__json_data__()
+        elif isinstance(o, (datetime.date, datetime.datetime)):
+            return o.timestamp()
         raise TypeError('{!r} is not JSON serializable'.format(o))
 
 
