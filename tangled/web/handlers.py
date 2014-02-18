@@ -24,6 +24,7 @@ a response).
 
 """
 import logging
+import os
 import pdb
 import time
 import traceback
@@ -143,6 +144,12 @@ def tweaker(app, request, next_handler):
 
     if specials['$accept']:
         request.accept = specials['$accept']
+    elif app.settings['tangled.app.set_accept_from_ext']:
+        root, ext = os.path.splitext(request.path_info)
+        repr_type = app.get(Representation, ext.lstrip('.'))
+        if repr_type is not None:
+            request.accept = repr_type.content_type
+            request.path_info = root
 
     return next_handler(app, request)
 
