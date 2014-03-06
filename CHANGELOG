@@ -1,7 +1,18 @@
 0.1a7 (unreleased)
 ==================
 
-- No changes yet
+- The Accept header can now be set via a file name extension in URL. For
+  example, the URL /users.json will cause the Accept header to be set to
+  application/json, and the .json extension will remove from the request's path
+  before the request is passed down to the application. This functionality is
+  enabled via the tangled.app.set_accept_from_ext setting (it defaults to on).
+- Encode date and datetime objects as timestamps in JSON responses (only if
+  custom encoding hasn't been configured).
+- Make exception log messages configurable. The
+  tangled.app.exc_log_message_factory setting can be pointed at a function that
+  accepts an app, request, and exception and returns a string.
+- Start adding "main" (i.e., prose) documentation.
+- Slightly improve package metadata.
 
 
 0.1a6 (2014-02-10)
