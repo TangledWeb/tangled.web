@@ -25,6 +25,7 @@ Contents
    quick-start
    installation
    contributing
+   main
    app-api/index
    extension-api/index
 
