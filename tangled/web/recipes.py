@@ -23,7 +23,7 @@ EXTRA_SETTINGS = {{{extra_settings}}}
 application = FACTORY(
     SETTINGS_FILE,
     parse_settings=PARSE_SETTINGS,
-    extra_settings=EXTRA_SETTINGS,
+    **EXTRA_SETTINGS
 )
 \
 """
