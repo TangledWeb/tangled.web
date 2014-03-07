@@ -19,12 +19,6 @@ Mac OS, `Homebrew <http://brew.sh/>`_ is an easy way to install Python::
 
 .. note:: Python 2.x is *not* supported, and there are no plans to support it.
 
-Install Git
-===========
-
-Currently, it's necessary to install `Git <http://git-scm.com/>`_ so that
-``tangled.*`` dependencies can be installed.
-
 Virtual Env
 ===========
 
@@ -48,11 +42,16 @@ Install Dependencies
 A couple of Tangled dependencies need to be installed so that the
 ``tangled scaffold`` command and ``basic`` scaffold are available::
 
+    ./bin/pip install tangled.web==VERSION
+
+Replace `VERSION` with the version you want to install. The current version
+is |version|.
+
+If you want to use the latest code, you can do this instead (requires git to be
+installed)::
+
     ./bin/pip install -e git+git://github.com/TangledWeb/tangled#egg=tangled
     ./bin/pip install -e git+git://github.com/TangledWeb/tangled.web#egg=tangled.web
-
-.. note:: Once ``tangled.web`` is released to PyPI, this will be reduced to
-          simply ``./bin/pip install tangled.web``
 
 Create a Basic Tangled Web App
 ==============================
