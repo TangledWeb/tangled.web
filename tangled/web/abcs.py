@@ -6,6 +6,11 @@ class AApplication(metaclass=ABCMeta):
     """Just a marker for now."""
 
 
+class AAppSettings(metaclass=ABCMeta):
+
+    """Just a marker for now."""
+
+
 class AHandler(metaclass=ABCMeta):
 
     """Just a marker for now."""

@@ -15,10 +15,8 @@ def on_created(event):
 
 class Tests(unittest.TestCase):
 
-    def make_app(self, settings=None, parse_settings=True, **extra_settings):
-        settings = settings if settings is not None else {}
-        app = Application(settings, parse_settings, **extra_settings)
-        return app
+    def make_app(self, settings=None, **extra_settings):
+        return Application(settings or {}, **extra_settings)
 
     def test_create(self):
         app = self.make_app()

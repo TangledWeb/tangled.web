@@ -27,7 +27,7 @@ from .handlers import HandlerWrapper
 from .representations import Representation
 from .resource.config import Field as ConfigField, RepresentationArg
 from .resource.mounted import MountedResource
-from .settings import parse_settings, parse_settings_file
+from .settings import make_app_settings
 from .static import LocalDirectory, RemoteDirectory
 
 
@@ -56,26 +56,27 @@ class Application(Registry):
     **Settings:**
 
     ``settings`` can be passed as either a file name pointing to a
-    settings file or as a dict. File names can be specified as absolute,
-    relative, or asset paths:
+    settings file or as a dict.
+
+    File names can be specified as absolute, relative, or asset paths:
 
         - development.ini
         - /some/where/production.ini
         - some.package:some.ini
 
-    When ``settings`` is a dict, you can specify that you want the
-    settings to be parsed by passing ``parse_settings=True``. This uses
-    :func:`tangled.web.settings.parse_settings` to parse known settings
-    as the types specified in
-    :const:`tangled.web.settings.CONVERSION_MAP`. This also lets you use
-    the ``converter(key)`` syntax with your settings.
-
-    Note that when a settings file is passed, it will *always* be
-    parsed as described above.
+    A plain dict can be used when no special handling of settings is
+    required. For more control of how settings are parsed (or to
+    disable parsing), pass a :class:`.AAppSettings` instance instead
+    (typically, but not necessarily, created by calling
+    :func:`tangled.web.settings.make_app_settings`).
 
     Extra settings can be passed as keyword args. These settings will
-    override *all* other settings. They will be parsed just like other
-    settings if the ``parse_settings`` flag is set.
+    override *all* other settings. They will be parsed along with other
+    settings.
+
+    NOTE: If ``settings`` is an :class:`.AppSettings` instance,
+    extra settings passed here will be ignored; pass them to the
+    :class:`.AppSettings` instead.
 
     **Logging:**
 
@@ -86,19 +87,10 @@ class Application(Registry):
 
     """
 
-    def __init__(self, settings, parse_settings=False, **extra_settings):
-        if isinstance(settings, str):
-            settings = self.parse_settings_file(settings)
-        elif parse_settings:
-            settings = self.parse_settings(settings)
-        default_settings = self.parse_settings_file(
-            'tangled.web:defaults.ini', meta_settings=False)
-        self.settings = default_settings
-        self.settings.update(settings)
-        if extra_settings:
-            if parse_settings:
-                extra_settings = self.parse_settings(extra_settings)
-            self.settings.update(extra_settings)
+    def __init__(self, settings, **extra_settings):
+        if not isinstance(settings, abcs.AAppSettings):
+            settings = make_app_settings(settings, **extra_settings)
+        self.settings = settings
 
         # Register default representations (content type => repr. type).
         # Includes can override this.
@@ -203,9 +195,6 @@ class Application(Registry):
     @reify
     def exc_log_message_factory(self):
         return self.get_setting('exc_log_message_factory')
-
-    parse_settings = staticmethod(parse_settings)
-    parse_settings_file = staticmethod(parse_settings_file)
 
     def get_setting(self, key, default=NOT_SET):
         """Get a setting; return ``default`` *if* one is passed.

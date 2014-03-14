@@ -7,6 +7,7 @@ This documents the API that's typically used by application developers.
    :maxdepth: 2
 
    app
+   settings
    events
    request
    resource

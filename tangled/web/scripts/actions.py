@@ -1,13 +1,13 @@
 import argparse
 import re
 
-from tangled.web.settings import parse_settings, parse_settings_file
+from tangled.web import make_app_settings
 
 
 class SettingsFileAction(argparse.Action):
 
     def __call__(self, parser, namespace, value, option_string=None):
-        settings = parse_settings_file(value)
+        settings = make_app_settings(value)
         setattr(namespace, self.dest, settings)
 
 
@@ -23,5 +23,5 @@ class SettingsAction(argparse.Action):
                 raise ValueError(value)
             k, v = match.group('k'), match.group('v')
             settings[k] = v
-        settings = parse_settings(settings)
+        settings = make_app_settings(settings)
         setattr(namespace, self.dest, settings)
