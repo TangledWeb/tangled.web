@@ -24,7 +24,7 @@ setup(
         'MarkupSafe>=0.18',
         'venusian>=1.0a8',
         'WebOb>=1.3.1',
-        'zc.recipe.egg',
+        'zc.recipe.egg>=2.0.1',
     ],
     extras_require={
         'dev': [
