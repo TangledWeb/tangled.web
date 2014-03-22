@@ -1,7 +1,26 @@
-0.1a8 (unreleased)
+0.1a8 (2014-03-22)
 ==================
 
-- No changes yet
+- Simplify and improve settings parsing. In particular, move settings parsing
+  logic from `Application.__init__()` to a new `settings.make_app_settings()`
+  function. The purpose of this is to make it easy for apps to do custom
+  settings parsing by calling `make_app_settings()` and passing the result to
+  `Application`. In simple cases, though, this can be ignored, and a plain
+  dict or settings file name can be passed to `Application` as before.
+- As part of the above, `Application` no longer accepts a `parse_settings` arg;
+  `make_app_settings()` has a `parse` arg instead that serves the same purpose
+  (disabling parsing, since it's enabled by default).
+- Also part of the above: the `parse_settings()` and `parse_settings_file()`
+  functions were removed from `settings` and the corresponding static methods
+  were removed from `Application`. They weren't very useful in the first place
+  and are less so now.
+- Fix generation of application.wsgi via wsgi_application recipe: pass extra
+  settings to `Application` via `**` instead of passing the extra settings dict
+  as a single keyword arg.
+- In quick start doc, install dependencies via PyPI rather than git (now that
+  releases have been made of the relevant packages).
+- Upgrade tangled from 0.1a6 to 0.1a7. 0.1a7 contains some fixes and
+  improvements to settings parsing.
 
 
 0.1a7 (unreleased)
