@@ -17,12 +17,10 @@ from tangled.util import load_object
 
 FACTORY = load_object('{factory}')
 SETTINGS_FILE = '{settings_file}'
-PARSE_SETTINGS = {parse_settings}
 EXTRA_SETTINGS = {{{extra_settings}}}
 {initialization}
 application = FACTORY(
     SETTINGS_FILE,
-    parse_settings=PARSE_SETTINGS,
     **EXTRA_SETTINGS
 )
 \
@@ -84,7 +82,6 @@ class WSGIApplication(object):
             sys_paths=sys_paths,
             factory=self.options['app-factory'],
             settings_file=self.options['settings-file'],
-            parse_settings=self.options.get('parse-settings', True),
             extra_settings=extra_settings,
             initialization=initialization,
         )
