@@ -22,8 +22,8 @@ setup(
     install_requires=[
         'tangled>=0.1a7',
         'MarkupSafe>=0.23',
-        'venusian>=1.0a8',
-        'WebOb>=1.3.1',
+        'venusian>=1.0',
+        'WebOb>=1.4',
         'zc.recipe.egg>=2.0.1',
     ],
     extras_require={
