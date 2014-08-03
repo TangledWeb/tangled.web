@@ -1,6 +1,6 @@
 import traceback
 
-from tangled.decorators import reify
+from tangled.decorators import cached_property
 from tangled.util import load_object
 
 from .actions import SettingsAction, SettingsFileAction
@@ -29,7 +29,7 @@ class AppMixin:
             action=SettingsAction, default={},
             help='Additional settings as key=val pairs')
 
-    @reify
+    @cached_property
     def settings(self):
         settings = {}
         settings.update(self.args.settings_from_file)

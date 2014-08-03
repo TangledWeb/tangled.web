@@ -10,7 +10,7 @@ from webob.exc import HTTPInternalServerError
 
 import tangled.decorators
 from tangled.converters import as_tuple
-from tangled.decorators import reify
+from tangled.decorators import cached_property
 from tangled.registry import ARegistry, process_registry
 from tangled.util import (
     NOT_SET,
@@ -187,12 +187,12 @@ class Application(Registry):
 
     ## Settings
 
-    @reify
+    @cached_property
     def debug(self):
         """Wraps ``self.settings['debug'] merely for convenience."""
         return self.settings['debug']
 
-    @reify
+    @cached_property
     def exc_log_message_factory(self):
         return self.get_setting('exc_log_message_factory')
 
@@ -234,7 +234,7 @@ class Application(Registry):
 
     ## Handlers
 
-    @reify
+    @cached_property
     def _handlers(self):
         """Set up the handler chain."""
         settings = self.get_settings(prefix='tangled.app.handler.')
@@ -268,11 +268,11 @@ class Application(Registry):
         wrapped_handlers.reverse()
         return wrapped_handlers
 
-    @reify
+    @cached_property
     def _first_handler(self):
         return self._handlers[0]
 
-    @reify
+    @cached_property
     def _request_finished_handler(self):
         """Calls finished callbacks in exc handling context."""
         exc_handler = load_object(self.get_setting('handler.exc'))
@@ -557,9 +557,9 @@ class Application(Registry):
 
         Functions can already be decorated, or a ``decorator`` can be
         specified. If ``reify`` is ``True``, the function will be
-        decorated with :func:`tangled.decorators.reify`. If a
-        ``decorator`` is passed and ``reify`` is ``True``, ``reify``
-        will be applied as the outermost decorator.
+        decorated with :func:`tangled.decorators.cached_property`. If a
+        ``decorator`` is passed and ``reify`` is ``True``,
+        ``cached_property`` will be applied as the outermost decorator.
 
         """
         if not name:
@@ -574,7 +574,7 @@ class Application(Registry):
             if decorator:
                 attr = decorator(attr)
             if reify:
-                attr = tangled.decorators.reify(attr)
+                attr = tangled.decorators.cached_property(attr)
         elif decorator or reify:
             raise ValueError("can't decorate a non-callable attribute")
         self.register('dynamic_request_attr', attr, name)

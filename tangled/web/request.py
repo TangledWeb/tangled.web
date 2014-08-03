@@ -5,7 +5,7 @@ from urllib.parse import quote, quote_plus, urlencode, urlparse
 from webob import BaseRequest
 from webob.exc import status_map, WSGIHTTPException
 
-from tangled.decorators import reify, cached_property
+from tangled.decorators import cached_property
 
 from .abcs import AHelpers, AMountedResource, ARequest, AResponse
 from .exc import format_exc
@@ -60,7 +60,7 @@ class Request(ARequest, BaseRequest):
         """
         return self.app.get_setting(*args, **kwargs)
 
-    @reify
+    @cached_property
     def helpers(self):
         """Get helpers for this request.
 
@@ -75,7 +75,7 @@ class Request(ARequest, BaseRequest):
 
     # Response related
 
-    @reify
+    @cached_property
     def response(self):
         """Create the default response object for this request.
 
@@ -137,7 +137,7 @@ class Request(ARequest, BaseRequest):
         for name, value in kwargs.items():
             setattr(response, name, value)
 
-    @reify
+    @cached_property
     def response_content_type(self):
         """Get the content type to use for the response.
 
@@ -305,7 +305,7 @@ class Request(ARequest, BaseRequest):
         """
         self._finished_callbacks.append((callback, args, kwargs))
 
-    @reify
+    @cached_property
     def _finished_callbacks(self):
         return []
 
