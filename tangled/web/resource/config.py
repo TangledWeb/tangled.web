@@ -2,14 +2,12 @@ from collections import namedtuple
 from copy import deepcopy
 from itertools import chain
 
-import venusian
-
+from tangled.decorators import register_action
 from tangled.util import fully_qualified_name
 from tangled.web.const import ALL_HTTP_METHODS
 
 
-class config:
-
+def config(content_type, **kwargs):
     """Decorator for configuring resources methods.
 
     When used on a resource class, the class level configuration will be
@@ -34,38 +32,33 @@ class config:
                 pass
 
     """
+    if 'redirect' in kwargs:
+        kwargs['status'] = kwargs.pop('redirect')
+    if not kwargs:
+        raise TypeError('@config requires at least one keyword arg')
 
-    def __init__(self, content_type, **kwargs):
-        self.content_type = content_type
-        if 'redirect' in kwargs:
-            kwargs['status'] = kwargs.pop('redirect')
-        if not kwargs:
-            raise TypeError('@config requires at least one keyword arg')
-        self.kwargs = kwargs
-
-    def __call__(self, wrapped):
-        def venusian_callback(scanner, *_):
-            app = scanner.app
-
+    def wrapper(wrapped):
+        def action(app):
             # This is here so the app won't start if any of the args
             # passed to @config are invalid. Otherwise, the invalid args
             # wouldn't be detected until a request is made to a resource
-            # that was decorated with invalid args.
-            # NOTE: We can't check *everything* preemptively here, but
-            # we do what we can.
+            # that was decorated with invalid args. NOTE: We can't check
+            # *everything* pre-emptively here, but we do what we can.
             if isinstance(wrapped, type):
-                Config(app, 'GET', self.content_type, **self.kwargs)
+                Config(app, 'GET', content_type, **kwargs)
             elif wrapped.__name__ in ALL_HTTP_METHODS:
-                Config(app, wrapped.__name__, self.content_type, **self.kwargs)
+                Config(app, wrapped.__name__, content_type, **kwargs)
 
-            fq_name = fully_qualified_name(wrapped)
-            differentiator = fq_name, self.content_type
+            differentiator = fully_qualified_name(wrapped), content_type
             if app.contains(config, differentiator):
-                app.get(config, differentiator).update(self.kwargs)
+                app.get(config, differentiator).update(kwargs)
             else:
-                app.register(config, self.kwargs, differentiator)
-        venusian.attach(wrapped, venusian_callback, category='tangled')
+                app.register(config, kwargs, differentiator)
+
+        register_action(wrapped, action, 'tangled.web')
         return wrapped
+
+    return wrapper
 
 
 _fields = ('methods', 'content_type', 'name', 'default', 'required')

@@ -6,7 +6,7 @@ Including other configuration
 
 .. automethod:: tangled.web.app.Application.include
 
-Scanning for configuration
-==========================
+Loading configuration registered via decorators
+===============================================
 
-.. automethod:: tangled.web.app.Application.scan
+.. automethod:: tangled.web.app.Application.load_config

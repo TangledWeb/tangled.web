@@ -4,13 +4,11 @@ import logging.config
 import pdb
 import re
 
-import venusian
-
 from webob.exc import HTTPInternalServerError
 
 import tangled.decorators
 from tangled.converters import as_tuple
-from tangled.decorators import cached_property
+from tangled.decorators import cached_property, fire_actions
 from tangled.registry import ARegistry, process_registry
 from tangled.util import (
     NOT_SET,
@@ -125,15 +123,15 @@ class Application(Registry):
             args, kwargs = arg_spec['args'], arg_spec['kwargs']
             self.mount_resource(*args, **kwargs)
 
-        # Before scan
+        # Before config is loaded via load_config()
         if self.get_setting('csrf.enabled'):
             self.include('.csrf')
 
         for include in self.get_setting('includes'):
             self.include(include)
 
-        for where in self.get_setting('scan'):
-            self.scan(where)
+        for where in self.get_setting('load_config'):
+            self.load_config(where)
 
         request_factory = self.get_setting('request_factory')
         self.register(abcs.ARequest, request_factory)
@@ -295,11 +293,10 @@ class Application(Registry):
         obj = load_object(obj, 'include')
         return obj(self)
 
-    def scan(self, where):
-        """Scan the indicated package or module."""
+    def load_config(self, where):
+        """Load config registered via decorators."""
         where = load_object(where, level=3)
-        scanner = venusian.Scanner(app=self)
-        scanner.scan(where, categories=('tangled',))
+        fire_actions(where, tags='tangled.web', args=(self,))
 
     def add_handler(self, handler):
         """Add a handler to the handler chain.

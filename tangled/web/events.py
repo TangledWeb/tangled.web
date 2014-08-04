@@ -11,15 +11,14 @@ event dependent.
 """
 import sys
 
-import venusian
+from tangled.decorators import register_action
 
 
-class subscriber:
-
+def subscriber(event_type, *args, **kw):
     """Decorator for adding event subscribers.
 
-    Subscribers registered this way won't be activated until a scan is
-    done via :meth:`tangled.web.app.Application.scan`.
+    Subscribers registered this way won't be activated until
+    :meth:`tangled.web.app.Application.load_config` is called.
 
     Example::
 
@@ -28,19 +27,13 @@ class subscriber:
             log.debug(event.resource.name)
 
     """
-
-    def __init__(self, event_type, *args, **kwargs):
-        self.event_type = event_type
-        self.args = args
-        self.kwargs = kwargs
-
-    def __call__(self, wrapped):
-        def venusian_callback(scanner, *_):
-            app = scanner.app
-            app.add_subscriber(
-                self.event_type, wrapped, *self.args, **self.kwargs)
-        venusian.attach(wrapped, venusian_callback, category='tangled')
+    def wrapper(wrapped):
+        register_action(
+            wrapped,
+            lambda app: app.add_subscriber(event_type, wrapped, *args, **kw),
+            tag='tangled.web')
         return wrapped
+    return wrapper
 
 
 class ApplicationCreated:
