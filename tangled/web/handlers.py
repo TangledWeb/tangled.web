@@ -67,7 +67,7 @@ def exc_handler(app, request, next_handler):
                 request.resource = resource
                 request.resource_method = 'GET'
                 request.response = response
-                del request.resource_config
+                request.reset_resource_config()
                 try:
                     return main(app, request, None)
                 except WSGIHTTPException as exc:
