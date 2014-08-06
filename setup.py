@@ -20,7 +20,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        'tangled>=0.1a7',
+        'tangled>=0.1a8',
         'MarkupSafe>=0.23',
         'WebOb>=1.4',
         'zc.recipe.egg>=2.0.1',
