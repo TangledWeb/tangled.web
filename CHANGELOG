@@ -1,7 +1,15 @@
-0.1a9 (unreleased)
+0.1a9 (2014-08-05)
 ==================
 
-- No changes yet
+- Tidy up generated `application.wsgi` scripts: don't pass `parse_settings` to
+  `Application` since `Application` no longer has a `parse_settings` arg.
+- Replace `@reify` with `@cached_property` throughout. `@reify` was removed
+  from `tangled`.
+- Remove venusian dependency; use tangled's deferred decorator action system
+  instead.
+- Add a safe method for resetting a request's resource config:
+  `request.reset_resource_config()`. This ensures `request.resource_config` has
+  been accessed before attempting to delete it.
 
 
 0.1a8 (2014-03-22)
