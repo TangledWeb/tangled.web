@@ -10,4 +10,4 @@ install:
 script:
   - ./bin/tangled test
   - ./bin/python -m nose
-  - sphinx-build -E docs docs/_build
+  - ./bin/sphinx-build -E docs docs/_build
