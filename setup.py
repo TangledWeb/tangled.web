@@ -20,7 +20,7 @@ setup(
     ],
     extras_require={
         'dev': [
-            'tangled[dev]>=0.1a7',
+            'tangled[dev]>=0.1a8',
         ],
     },
     entry_points="""
