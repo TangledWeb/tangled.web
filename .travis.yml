@@ -11,4 +11,4 @@ install:
 script:
   - tangled test
   - nosetests
-  - .sphinx-build -E docs docs/_build
+  - sphinx-build -E docs docs/_build
