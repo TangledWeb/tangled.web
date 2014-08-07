@@ -7,7 +7,8 @@ install:
   - pip install -U pip
   - pip install zc.buildout
   - buildout
-  - ls ./bin
+  - export PATH=./bin:$PATH
 script:
-  - ./bin/tangled test
-  - ./bin/sphinx-build -E docs docs/_build
+  - tangled test
+  - nosetests
+  - .sphinx-build -E docs docs/_build
