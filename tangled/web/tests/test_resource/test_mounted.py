@@ -46,8 +46,8 @@ class TestMountedResouce(unittest.TestCase):
         path = '/some/dir/'
         mr = MountedResource('test', None, path)
         self.assertTrue(mr.add_slash)
-        self.assert_(mr.match('GET', '/some/dir/'))
-        self.assert_(mr.match('GET', '/some/dir'))
+        self.assertTrue(mr.match('GET', '/some/dir/'))
+        self.assertTrue(mr.match('GET', '/some/dir'))
         self.assertEqual(mr.format_path(), '/some/dir/')
 
     def test_add_slash_redirect(self):
