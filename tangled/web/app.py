@@ -483,11 +483,13 @@ class Application(Registry):
 
         The format of a URL var is ``<(converter)identifier:regex>``.
         Angle brackets delimit URL vars. Only the ``identifier`` is
-        required; it can be an valid Python identifier.
+        required; it can be any valid Python identifier.
 
-        If a ``converter`` is specified, it can be any built-in such as
-        ``int`` or ``str``; it can also refer to any of the converters
-        in :mod:`tangled.util.converters`.
+        If a ``converter`` is specified, it can be a built-in name,
+        the name of a converter in :mod:`tangled.util.converters`, or
+        a ``package.module:callable`` path that points to a callable
+        that accepts a single argument. URL vars found in a request path
+        will be converted automatically.
 
         The ``regex`` can be *almost* any regular expression. The
         exception is that ``<`` and ``>`` can't be used. In practice,

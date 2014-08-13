@@ -3,6 +3,7 @@ import sys
 from collections import namedtuple, OrderedDict
 
 from tangled.converters import get_converter, as_tuple
+from tangled.util import load_object
 
 from ..abcs import AMountedResourceTree
 
@@ -132,9 +133,9 @@ class MountedResource:
     # URL var format: (converter)identifier:regex
     urlvar_regex = (
         r'<'
-        '(?:\((?P<converter>[a-z]+)\)?)?'  # Optional converter
-        '(?P<identifier>[^\d\W]\w*)'       # Any valid Python identifier
-        '(?::(?P<regex>[^/<>]+))?'         # Optional regular expression
+        '(?:\((?P<converter>[^\d\W][\w.:]*)\)?)?'  # Optional converter
+        '(?P<identifier>[^\d\W]\w*)'               # Any valid Python identifier
+        '(?::(?P<regex>[^/<>]+))?'                 # Optional regular expression
         '>'
     )
 
@@ -171,8 +172,16 @@ class MountedResource:
                 raise ValueError('{} already present'.format(identifier))
 
             regex = info['regex'] or r'[\w-]+'
+
             converter = info['converter']
-            converter = get_converter(converter) if converter else str
+            if converter:
+                if ':' in converter:
+                    converter = load_object(converter)
+                else:
+                    converter = get_converter(converter)
+            else:
+                converter = str
+
             urlvars_info[identifier] = {'regex': regex, 'converter': converter}
 
             # Get the non-matching part of the string after the previous

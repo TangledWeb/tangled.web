@@ -1,5 +1,7 @@
 import unittest
 
+from tangled.util import load_object
+
 from tangled.web import Application
 from tangled.web.handlers import resource_finder
 from tangled.web.resource.mounted import MountedResourceTree, MountedResource
@@ -19,6 +21,23 @@ class TestMountedResouce(unittest.TestCase):
 
         format_string = mr.format_string
         self.assertEqual(format_string, '/{path}{name}/{id}.{format};extra')
+
+    def test_converter_specified_by_path(self):
+        path = '/<(tangled.util:load_object)obj>'
+        mr = MountedResource('test', None, path)
+        info = mr.urlvars_info
+        self.assertIs(info['obj']['converter'], load_object)
+        self.assertEqual(
+            mr.format_path(obj='collections:OrderedDict'),
+            '/collections:OrderedDict')
+
+    def test_bad_converter(self):
+        path = '/<(duhr)id>'
+        with self.assertRaises(TypeError):
+            MountedResource('test', None, path)
+        path = '/<(tangled.util:duhr)obj>'
+        with self.assertRaises(AttributeError):
+            MountedResource('test', None, path)
 
     def test_format_path(self):
         path = '/<path><name:[a-z]{3}>/<(int)id:\d+>.<format:[a-z]+>;extra'
