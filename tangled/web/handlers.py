@@ -32,7 +32,7 @@ import traceback
 from webob.exc import WSGIHTTPException, HTTPInternalServerError
 
 from . import csrf
-from .abcs import AMountedResource
+from .abcs import AMountedResourceTree
 from .events import NewRequest, ResourceFound, NewResponse
 from .exc import DebugHTTPInternalServerError
 from .representations import Representation
@@ -173,13 +173,10 @@ def resource_finder(app, request, next_handler):
     a ``405 Method Not Allowed`` response is returned.
 
     """
-    mounted_resources = app.get_all(AMountedResource)
+    tree = app.get_required(AMountedResourceTree)
+    match = tree.find_for_request(request)
 
-    for mounted_resource in mounted_resources:
-        match = mounted_resource.match_request(request)
-        if match:
-            break
-    else:
+    if match is None:
         request.abort(404)
 
     mounted_resource = match.mounted_resource

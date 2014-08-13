@@ -24,7 +24,7 @@ from .exc import DebugHTTPInternalServerError
 from .handlers import HandlerWrapper
 from .representations import Representation
 from .resource.config import Field as ConfigField, RepresentationArg
-from .resource.mounted import MountedResource
+from .resource.mounted import MountedResourceTree, MountedResource
 from .settings import make_app_settings
 from .static import LocalDirectory, RemoteDirectory
 
@@ -89,6 +89,8 @@ class Application(Registry):
         if not isinstance(settings, abcs.AAppSettings):
             settings = make_app_settings(settings, **extra_settings)
         self.settings = settings
+
+        self.register(abcs.AMountedResourceTree, MountedResourceTree())
 
         # Register default representations (content type => repr. type).
         # Includes can override this.
@@ -515,12 +517,17 @@ class Application(Registry):
         ``parent/child`` and its path would be ``/parent/child``.
 
         """
-        factory = load_object(factory, level=_level)
         mounted_resource = MountedResource(
-            name, factory, path, methods=methods, method_name=method_name,
+            name,
+            load_object(factory, level=_level),
+            path,
+            methods=methods,
+            method_name=method_name,
             add_slash=add_slash)
         self.register(
             abcs.AMountedResource, mounted_resource, mounted_resource.name)
+        tree = self.get_required(abcs.AMountedResourceTree)
+        tree.add(mounted_resource)
         return SubResourceMounter(self, mounted_resource)
 
     def register_representation_type(self, representation_type, replace=False):
