@@ -1,3 +1,4 @@
+import logging
 import re
 from collections import namedtuple, OrderedDict
 
@@ -5,6 +6,9 @@ from tangled.converters import get_converter, as_tuple
 from tangled.util import load_object
 
 from ..abcs import AMountedResourceTree
+
+
+log = logging.getLogger(__name__)
 
 
 Match = namedtuple('Match', ('mounted_resource', 'urlvars'))
@@ -43,16 +47,21 @@ class MountedResourceTree(AMountedResourceTree):
         cache_key = method, path
         if cache_key in self.cache:
             try:
+                log.debug('Found {} in cache'.format(cache_key))
                 self.cache.move_to_end(cache_key)
                 return self.cache[cache_key]
             except KeyError:
-                pass  # key popped from cache by another thread
+                # Key popped from cache by another thread
+                log.warn(
+                    '{} was evicted from cache before it could be used'
+                    .format(cache_key))
         tree = self.root
         segments = path.lstrip('/').split('/')
         height = len(segments)
         if height not in tree.resource_depths:
             return None  # Short circuit if a match isn't possible
         stack = [[{}, 0]]
+        nodes_visited = 0
         while tree:
             stack_top = stack[-1]
             stack_len = len(stack)
@@ -62,6 +71,7 @@ class MountedResourceTree(AMountedResourceTree):
                 stack_top[1] += 1
                 if depth not in child.resource_depths:
                     continue  # Short circuit if a match isn't possible
+                nodes_visited += 1
                 match = re.search(child.regex, segment)
                 if match:
                     stack.append([match.groupdict(), 0])
@@ -79,6 +89,9 @@ class MountedResourceTree(AMountedResourceTree):
                                 self.cache[cache_key] = match
                                 if len(self.cache) > self.cache_size:
                                     self.cache.popitem(last=False)
+                                log.debug(
+                                    '{} found after visiting {} nodes'
+                                    .format(cache_key, nodes_visited))
                                 return match
                         stack.pop()
                     else:
