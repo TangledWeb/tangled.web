@@ -12,8 +12,12 @@ Match = namedtuple('Match', ('mounted_resource', 'urlvars'))
 
 class MountedResourceTree(AMountedResourceTree):
 
-    def __init__(self):
+    def __init__(self, cache_size=64):
         self.root = Node(None, None)
+        # Simple LRU cache {(method, path) => Match}. Least recently
+        # used item is at front.
+        self.cache = OrderedDict()
+        self.cache_size = cache_size
 
     def add(self, mounted_resource):
         tree = self.root
@@ -36,6 +40,13 @@ class MountedResourceTree(AMountedResourceTree):
             tree.mounted_resources.append(mounted_resource)
 
     def find(self, method, path):
+        cache_key = method, path
+        if cache_key in self.cache:
+            try:
+                self.cache.move_to_end(cache_key)
+                return self.cache[cache_key]
+            except KeyError:
+                pass  # key popped from cache by another thread
         tree = self.root
         segments = path.lstrip('/').split('/')
         height = len(segments)
@@ -64,7 +75,11 @@ class MountedResourceTree(AMountedResourceTree):
                                 for k in urlvars_info:
                                     converter = urlvars_info[k]['converter']
                                     urlvars[k] = converter(urlvars[k])
-                                return Match(mounted_resource, urlvars)
+                                match = Match(mounted_resource, urlvars)
+                                self.cache[cache_key] = match
+                                if len(self.cache) > self.cache_size:
+                                    self.cache.popitem(last=False)
+                                return match
                         stack.pop()
                     else:
                         tree = child

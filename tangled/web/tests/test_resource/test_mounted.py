@@ -98,7 +98,7 @@ class TestMountedResouce(unittest.TestCase):
 class TestMountedResourceTree(unittest.TestCase):
 
     def setUp(self):
-        tree = MountedResourceTree()
+        tree = MountedResourceTree(cache_size=2)
         tree.add(MountedResource('home', None, '/'))
         tree.add(MountedResource('a', None, '/a'))
         tree.add(MountedResource('b', None, '/b/'))
@@ -106,6 +106,7 @@ class TestMountedResourceTree(unittest.TestCase):
         tree.add(MountedResource('xkz', None, '/x/k/z'))
         tree.add(MountedResource('y_get', None, '/y', methods='GET'))
         tree.add(MountedResource('y_post', None, '/y', methods='POST'))
+        tree.add(MountedResource('cached', None, '/cached'))
         tree.add(MountedResource('catch-all', None, '/<x>', methods='GET'))
         self.tree = tree
 
@@ -175,3 +176,26 @@ class TestMountedResourceTree(unittest.TestCase):
         self.assertIsNotNone(match)
         mr = match.mounted_resource
         self.assertEqual(mr.name, 'y_post')
+
+    def test_cache(self):
+        method, path = 'GET', '/cached'
+        self.assertNotIn((method, path), self.tree.cache)
+        match = self.tree.find(method, path)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.mounted_resource.name, 'cached')
+        self.assertIn((method, path), self.tree.cache)
+
+        keys = list(self.tree.cache.keys())
+        self.assertEqual(keys, [(method, path)])
+
+        self.tree.find('GET', '/a')
+        keys = list(self.tree.cache.keys())
+        self.assertEqual(keys, [(method, path), ('GET', '/a')])
+
+        self.tree.find(method, path)
+        keys = list(self.tree.cache.keys())
+        self.assertEqual(keys, [('GET', '/a'), (method, path)])
+
+        self.tree.find('GET', '/b')
+        keys = list(self.tree.cache.keys())
+        self.assertEqual(keys, [(method, path), ('GET', '/b')])
