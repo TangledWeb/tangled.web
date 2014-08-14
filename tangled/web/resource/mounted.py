@@ -1,5 +1,4 @@
 import re
-import sys
 from collections import namedtuple, OrderedDict
 
 from tangled.converters import get_converter, as_tuple
@@ -15,41 +14,47 @@ class MountedResourceTree(AMountedResourceTree):
 
     def __init__(self):
         self.root = Node(None, None)
-        self.height = 0
-        self.min_height = sys.maxsize
 
     def add(self, mounted_resource):
         tree = self.root
         segments = mounted_resource.segments
-        height = min_height = len(segments)
+        add_slash = mounted_resource.add_slash
+        depth = len(segments)
         for segment in segments:
+            tree.resource_depths.add(depth)
+            if add_slash:
+                tree.resource_depths.add(depth + 1)
             tree = tree.make_child(segment)
+            depth -= 1
+        assert depth == 0
+        tree.resource_depths.add(0)
         tree.mounted_resources.append(mounted_resource)
-        if mounted_resource.add_slash:
+        if add_slash:
+            tree.resource_depths.add(1)
             tree = tree.make_child('')
+            tree.resource_depths.add(0)
             tree.mounted_resources.append(mounted_resource)
-            height += 1
-        if height > self.height:
-            self.height = height
-        if min_height < self.min_height:
-            self.min_height = min_height
 
     def find(self, method, path):
-        segments = path.lstrip('/').split('/')
-        num_segments = len(segments)
-        if num_segments > self.height or num_segments < self.min_height:
-            return None  # Short circuit if a match isn't possible
         tree = self.root
+        segments = path.lstrip('/').split('/')
+        height = len(segments)
+        if height not in tree.resource_depths:
+            return None  # Short circuit if a match isn't possible
         stack = [[{}, 0]]
         while tree:
             stack_top = stack[-1]
-            segment = segments[len(stack) - 1]
+            stack_len = len(stack)
+            depth = height - stack_len
+            segment = segments[stack_len - 1]
             for child in tree.child_list(stack_top[1]):
                 stack_top[1] += 1
+                if depth not in child.resource_depths:
+                    continue  # Short circuit if a match isn't possible
                 match = re.search(child.regex, segment)
                 if match:
                     stack.append([match.groupdict(), 0])
-                    if len(stack) > num_segments:
+                    if len(stack) > height:
                         for mounted_resource in child.mounted_resources:
                             if mounted_resource.responds_to(method):
                                 urlvars = {}
@@ -90,6 +95,9 @@ class Node:
         # request method is mapped to a resource method with a different
         # name (i.e., when a method_name is passed to MountedResource).
         self.mounted_resources = []
+
+        # Depths where resources are mounted (relative to this node).
+        self.resource_depths = set()
 
     def make_child(self, segment):
         child = self.children.get(segment)
@@ -147,17 +155,17 @@ class MountedResource:
         if path == '/':
             add_slash = False
         else:
-            add_slash = True if path.endswith('/') else add_slash
+            if path.endswith('/'):
+                add_slash = True
+            elif add_slash:
+                path = '{}/'.format(path)
 
         self.name = name
         self.factory = factory
-        self.path = path
+        self.path = path  # normalized path
         self.methods = set(as_tuple(methods, sep=','))
         self.method_name = method_name
         self.add_slash = add_slash
-
-        if add_slash:
-            path = path.rstrip('/')
 
         urlvars_info = {}
         path_regex = []
@@ -202,15 +210,15 @@ class MountedResource:
             format_string.append(remainder)
 
         path_regex = ''.join(path_regex)
-        self.segments = path_regex.strip('/').split('/')
-
-        if add_slash:
-            path_regex += r'(?:/?)'
-            format_string.append('/')
 
         self.urlvars_info = urlvars_info
-        self.path_regex = path_regex
+        self.segments = path_regex.strip('/').split('/')
         self.format_string = ''.join(format_string)
+
+        if add_slash:
+            path_regex = r'{}(?:/?)'.format(path_regex.rstrip('/'))
+
+        self.path_regex = path_regex
 
     def responds_to(self, method):
         return not self.methods or method in self.methods
