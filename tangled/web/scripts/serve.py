@@ -81,8 +81,8 @@ class Command(ACommand, AppMixin):
                                 time.sleep(1)
                                 n += 1
                         except KeyboardInterrupt:
-                            monitor_thread.server.shutdown()
                             print('\nAborting...')
+                            monitor_thread.server.shutdown()
                             self.exit(status=exit_code)
                     else:
                         self.exit(status=exit_code)
