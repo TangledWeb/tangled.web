@@ -71,17 +71,39 @@ class Command(ACommand, AppMixin):
                 exit_code = subprocess.call(argv)
                 if exit_code:
                     if exit_code == 1:  # Error in app startup code
-                        msg = '\rAttempting restart in {} seconds...'
-                        seconds = 5
-                        while seconds:
-                            self.print_error(msg.format(seconds), end='')
-                            seconds -= 1
-                            time.sleep(1)
-                        print('\n')
+                        n = 0
+                        monitor_thread = MonitorThread(FakeServer(), 1)
+                        try:
+                            monitor_thread.start()
+                            msg = '\rWaiting for changes... {}s'
+                            while monitor_thread.is_alive():
+                                print(msg.format(n), end='')
+                                time.sleep(1)
+                                n += 1
+                        except KeyboardInterrupt:
+                            monitor_thread.server.shutdown()
+                            print('\nAborting...')
+                            self.exit(status=exit_code)
                     else:
                         self.exit(status=exit_code)
             except KeyboardInterrupt:
                 break
+
+
+class FakeServer:
+
+    # Used to watch for changes when an error occurs during app startup
+    # (used above in Command.run_with_monitor()) Yes, this is a bit
+    # hacky. A server instance probably shouldn't be passed to the
+    # MonitorThread in the first place.
+
+    running = True
+
+    def shutdown(self):
+        self.running = False
+
+    def __bool__(self):
+        return self.running
 
 
 class MonitorThread(threading.Thread):
@@ -98,9 +120,10 @@ class MonitorThread(threading.Thread):
         while self.server:
             changed = list(self.changed_files)
             if changed:
-                print('Changed files detected:')
+                print('\nChanged files detected:')
                 for file_name in changed:
                     print('    {}'.format(file_name))
+                print()
                 self.server.shutdown()
                 break
             time.sleep(self.interval)
