@@ -41,4 +41,4 @@ class AppMixin:
             return self.args.app_factory(self.settings)
         except:
             traceback.print_exc()
-            self.exit(1, '\nCould not load app')
+            self.exit('\nCould not load app', 1)
