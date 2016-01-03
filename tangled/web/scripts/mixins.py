@@ -11,11 +11,12 @@ class AppMixin:
     def __init__(self, parser, args):
         app_factory = self.args.app_factory
         if app_factory is None:
-            app_factory = self.settings.pop('factory', None)
+            app_factory = self.settings.get('factory', None)
             if app_factory is None:
                 parser.error(
-                    'App factory must be specified via --app-factory or '
-                    'in settings')
+                    '\n    An app factory must be specified via --app-factory or factory setting.'
+                    '\n    Did you specify a settings file via -f?'
+                    '\n    If so, does it contain an [app] section with a factory setting?')
         self.args.app_factory = load_object(app_factory, 'make_app')
 
     @classmethod
