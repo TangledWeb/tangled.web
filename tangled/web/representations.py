@@ -71,12 +71,12 @@ class HTMLRepresentation(Representation):
 
     key = 'html'
     content_type = 'text/html'
-    data_type = str
+    data_type = object
     quality = 1.0
 
     @property
     def content(self):
-        return html.escape(self.data)
+        return html.escape(str(self.data))
 
 
 class JSONRepresentation(Representation):
