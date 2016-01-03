@@ -161,7 +161,12 @@ class Application(Registry):
         for subscriber in self.get_setting('on_created'):
             self.on_created(subscriber)
 
+        if not self.get_setting('tangled.app.defer_created', False):
+            self.created()
+
+    def created(self):
         self.notify_subscribers(ApplicationCreated, self)
+        return self
 
     def on_created(self, func, priority=None, once=True, **args):
         """Add an :class:`~tangled.web.events.ApplicationCreated`
