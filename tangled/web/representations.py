@@ -59,7 +59,7 @@ class NoContentRepresentation(Representation):
 class StringRepresentation(Representation):
 
     key = 'string'
-    data_type = str
+    data_type = object
     content_type = 'text/plain'
 
     @property
