@@ -117,13 +117,11 @@ class Application(Registry):
         # those from includes. It's assumed that only the main
         # application will specify static directories and resources this
         # way.
-        for arg_spec in self.get_setting('static_directories'):
-            args, kwargs = arg_spec['args'], arg_spec['kwargs']
-            self.mount_static_directory(*args, **kwargs)
+        for static_args in self.get_setting('static_directories'):
+            self.mount_static_directory(**static_args)
 
-        for arg_spec in self.get_setting('resources'):
-            args, kwargs = arg_spec['args'], arg_spec['kwargs']
-            self.mount_resource(*args, **kwargs)
+        for resource_args in self.get_setting('resources'):
+            self.mount_resource(**resource_args)
 
         # Before config is loaded via load_config()
         if self.get_setting('csrf.enabled'):

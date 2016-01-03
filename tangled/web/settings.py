@@ -1,4 +1,4 @@
-from tangled.converters import as_args
+from tangled.converters import as_meth_args
 from tangled.settings import parse_settings, parse_settings_file, check_required
 
 from .abcs import AAppSettings
@@ -23,10 +23,12 @@ def get_conversion_map():
         'tangled.app.representation.json.encoder.default': 'object',
         'tangled.app.request_factory': 'object',
         'tangled.app.response_factory': 'object',
-        'tangled.app.resources': as_args(None, None, None, None, 'bool'),
+        'tangled.app.resources':
+            as_meth_args('tangled.web:Application.mount_resource'),
         'tangled.app.load_config': 'tuple',
         'tangled.app.set_accept_from_ext': 'bool',
-        'tangled.app.static_directories': as_args(None, None, 'bool', None),
+        'tangled.app.static_directories':
+            as_meth_args('tangled.web:Application.mount_static_directory'),
         'tangled.app.tunnel_over_post': 'tuple',
     }
 
