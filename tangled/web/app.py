@@ -90,6 +90,8 @@ class Application(Registry):
             settings = make_app_settings(settings, **extra_settings)
         self.settings = settings
 
+        package = settings.get('package')
+
         self.register(abcs.AMountedResourceTree, MountedResourceTree())
 
         # Register default representations (content type => repr. type).
@@ -120,7 +122,19 @@ class Application(Registry):
         for static_args in self.get_setting('static_directories'):
             self.mount_static_directory(**static_args)
 
+        resources_package = self.get_setting('tangled.app.resources.package', package)
+
         for resource_args in self.get_setting('resources'):
+            factory = resource_args['factory']
+            if factory.startswith('.'):
+                if resources_package is None:
+                    raise ValueError(
+                        'Package-relative resource factory "{factory}" requires the package '
+                        'containing resources to be specified (set either the `package` or '
+                        '`tangled.app.resources.package` setting).'
+                        .format(factory=factory))
+                factory = '{package}{factory}'.format(package=resources_package, factory=factory)
+                resource_args['factory'] = factory
             self.mount_resource(**resource_args)
 
         # Before config is loaded via load_config()
