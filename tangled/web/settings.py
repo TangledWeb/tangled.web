@@ -4,28 +4,31 @@ from tangled.settings import parse_settings, parse_settings_file, check_required
 from .abcs import AAppSettings
 
 
-# Map of setting `key` => `converter`; `converter` can be any callable
-# that takes a single argument and returns a value. `converter` can also
-# be a string naming a builtin or converter from `tangled.converters`.
-CONVERSION_MAP = {
-    'debug': 'bool',
-    'debug.pdb': 'bool',
-    'tangled.app.csrf.enabled': 'bool',
-    'tangled.app.error_resource': 'object',
-    'tangled.app.exc_log_message_factory': 'object',
-    'tangled.app.handlers': 'list',
-    'tangled.app.includes': 'list',
-    'tangled.app.on_created': 'list_of_objects',
-    'tangled.app.representation.json.encoder': 'object',
-    'tangled.app.representation.json.encoder.default': 'object',
-    'tangled.app.request_factory': 'object',
-    'tangled.app.response_factory': 'object',
-    'tangled.app.resources': as_args(None, None, None, None, 'bool'),
-    'tangled.app.load_config': 'tuple',
-    'tangled.app.set_accept_from_ext': 'bool',
-    'tangled.app.static_directories': as_args(None, None, 'bool', None),
-    'tangled.app.tunnel_over_post': 'tuple',
-}
+def get_conversion_map():
+    # Map of setting `key` => `converter`; `converter` can be any callable
+    # that takes a single argument and returns a value. `converter` can also
+    # be a string naming a builtin or converter from `tangled.converters`.
+    return {
+        'debug': 'bool',
+        'debug.pdb': 'bool',
+        'factory': 'object',
+        'tangled.app.csrf.enabled': 'bool',
+        'tangled.app.error_resource': 'object',
+        'tangled.app.exc_log_message_factory': 'object',
+        'tangled.app.handlers': 'list',
+        'tangled.app.includes': 'list',
+        'tangled.app.defer_created': 'bool',
+        'tangled.app.on_created': 'list_of_objects',
+        'tangled.app.representation.json.encoder': 'object',
+        'tangled.app.representation.json.encoder.default': 'object',
+        'tangled.app.request_factory': 'object',
+        'tangled.app.response_factory': 'object',
+        'tangled.app.resources': as_args(None, None, None, None, 'bool'),
+        'tangled.app.load_config': 'tuple',
+        'tangled.app.set_accept_from_ext': 'bool',
+        'tangled.app.static_directories': as_args(None, None, 'bool', None),
+        'tangled.app.tunnel_over_post': 'tuple',
+    }
 
 
 def make_app_settings(settings, conversion_map={}, defaults={}, required=(),
@@ -64,13 +67,13 @@ def make_app_settings(settings, conversion_map={}, defaults={}, required=(),
 
     """
     app_settings = parse_settings_file(
-        'tangled.web:defaults.ini', conversion_map=CONVERSION_MAP,
+        'tangled.web:defaults.ini', conversion_map=get_conversion_map(),
         meta_settings=False)
     if isinstance(settings, str):
         settings = parse_settings_file(settings, section=section)
     settings.update(extra_settings)
     if parse:
-        _conversion_map = CONVERSION_MAP.copy()
+        _conversion_map = get_conversion_map()
         _conversion_map.update(conversion_map)
         settings = parse_settings(
             settings, conversion_map=_conversion_map, defaults=defaults,
