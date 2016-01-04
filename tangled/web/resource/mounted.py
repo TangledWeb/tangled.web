@@ -1,6 +1,7 @@
 import logging
 import re
 from collections import namedtuple, OrderedDict
+from functools import lru_cache
 
 from tangled.converters import get_converter, as_tuple
 from tangled.util import load_object
@@ -18,10 +19,8 @@ class MountedResourceTree(AMountedResourceTree):
 
     def __init__(self, cache_size=64):
         self.root = Node(None, None)
-        # Simple LRU cache {(method, path) => Match}. Least recently
-        # used item is at front.
-        self.cache = OrderedDict()
-        self.cache_size = cache_size
+        if cache_size:
+            self.find = lru_cache(cache_size)(self.find)
 
     def add(self, mounted_resource):
         tree = self.root
@@ -44,17 +43,6 @@ class MountedResourceTree(AMountedResourceTree):
             tree.mounted_resources.append(mounted_resource)
 
     def find(self, method, path):
-        cache_key = method, path
-        if cache_key in self.cache:
-            try:
-                log.debug('Found {} in cache'.format(cache_key))
-                self.cache.move_to_end(cache_key)
-                return self.cache[cache_key]
-            except KeyError:
-                # Key popped from cache by another thread
-                log.warn(
-                    '{} was evicted from cache before it could be used'
-                    .format(cache_key))
         tree = self.root
         segments = path.lstrip('/').split('/')
         height = len(segments)
@@ -86,12 +74,6 @@ class MountedResourceTree(AMountedResourceTree):
                                     converter = urlvars_info[k]['converter']
                                     urlvars[k] = converter(urlvars[k])
                                 match = Match(mounted_resource, urlvars)
-                                self.cache[cache_key] = match
-                                if len(self.cache) > self.cache_size:
-                                    self.cache.popitem(last=False)
-                                log.debug(
-                                    '{} found after visiting {} nodes'
-                                    .format(cache_key, nodes_visited))
                                 return match
                         stack.pop()
                     else:

@@ -177,25 +177,16 @@ class TestMountedResourceTree(unittest.TestCase):
         mr = match.mounted_resource
         self.assertEqual(mr.name, 'y_post')
 
-    def test_cache(self):
+    def test_find_lru_cache(self):
+        self.tree.find.cache_clear()
         method, path = 'GET', '/cached'
-        self.assertNotIn((method, path), self.tree.cache)
         match = self.tree.find(method, path)
         self.assertIsNotNone(match)
-        self.assertEqual(match.mounted_resource.name, 'cached')
-        self.assertIn((method, path), self.tree.cache)
-
-        keys = list(self.tree.cache.keys())
-        self.assertEqual(keys, [(method, path)])
-
-        self.tree.find('GET', '/a')
-        keys = list(self.tree.cache.keys())
-        self.assertEqual(keys, [(method, path), ('GET', '/a')])
-
-        self.tree.find(method, path)
-        keys = list(self.tree.cache.keys())
-        self.assertEqual(keys, [('GET', '/a'), (method, path)])
-
-        self.tree.find('GET', '/b')
-        keys = list(self.tree.cache.keys())
-        self.assertEqual(keys, [(method, path), ('GET', '/b')])
+        cache_info = self.tree.find.cache_info()
+        self.assertEqual(cache_info.hits, 0)
+        self.assertEqual(cache_info.misses, 1)
+        match = self.tree.find(method, path)
+        self.assertIsNotNone(match)
+        cache_info = self.tree.find.cache_info()
+        self.assertEqual(cache_info.hits, 1)
+        self.assertEqual(cache_info.misses, 1)
