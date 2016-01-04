@@ -1,7 +1,34 @@
-0.1a10 (unreleased)
+0.1a10 (2016-01-03)
 ===================
 
-- No changes yet
+- Store mounted resource paths in a tree instead of a list. Do lookups via the
+  tree instead of doing a linear regex search through a list. For most apps,
+  the performance difference probably won't matter, but it could be significant
+  for apps that have a lot of resources.
+- Improve how converters can be specified in URL vars. Ensure any valid Python
+  identifier is accepted, and allow `package:callable` paths.
+- When an error is encountered when running the dev server, wait until a change
+  is made to some file before attempting to restart (instead of blindly
+  attempting to restart every
+  5 seconds).
+- StringRepresentation now accepts any kind of data being returned from
+  a resource method.
+- Ditto for HTMLRepresentation. The data will be `str`-ified.
+- Add default app `factory` setting, which points at `tangled.web:Application`,
+  naturally. I don't see any point in *requiring* an app factory to be
+  specified in every app when the default will be used in most cases. At the
+  very least, simplifying getting up-and-running is a good thing.
+- When using the `tangled.app.resources` setting, allow paths to resources to
+  be relative to a package. The `tangled.app.resources.package` setting can be
+  used to specify the package; if that's not set, the `package` setting will be
+  used if present.
+- Provide a way to defer firing the `ApplicationCreated`` event. Normally, it's
+  always called at the end of `Application.__init__`, but there are cases where
+  this might not be desirable. The `tangled.app.defer_created` setting can be
+  used to control this (in which case, the event has to be fired manually).
+- Change the basic scaffold so the app is configured via the `include`
+  mechanism rather than using an app factory. The latter approach shouldn't be
+  recommended in the general case.
 
 
 0.1a9 (2014-08-05)
