@@ -49,7 +49,6 @@ class MountedResourceTree(AMountedResourceTree):
         if height not in tree.resource_depths:
             return None  # Short circuit if a match isn't possible
         stack = [[{}, 0]]
-        nodes_visited = 0
         while tree:
             stack_top = stack[-1]
             stack_len = len(stack)
@@ -59,7 +58,6 @@ class MountedResourceTree(AMountedResourceTree):
                 stack_top[1] += 1
                 if depth not in child.resource_depths:
                     continue  # Short circuit if a match isn't possible
-                nodes_visited += 1
                 match = re.search(child.regex, segment)
                 if match:
                     stack.append([match.groupdict(), 0])
