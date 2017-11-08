@@ -75,7 +75,7 @@ class Request(ARequest, BaseRequest):
 
     # Response related
 
-    @cached_property
+    @cached_property('resource_config')
     def response(self):
         """Create the default response object for this request.
 
@@ -152,7 +152,7 @@ class Request(ARequest, BaseRequest):
             content_type = self.get_setting('default_content_type')
         return content_type
 
-    @cached_property
+    @cached_property('response_content_type')
     def resource_config(self):
         """Get info for the resource associated with this request.
 
