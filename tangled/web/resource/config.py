@@ -107,7 +107,7 @@ class Config:
 
     @classmethod
     def for_resource(cls, app, resource, request_method, content_type,
-                     resource_method=None):
+                     resource_method=None, include_defaults=True):
         """Get :class:`Config` for resource, method, & content type.
 
         This collects all the relevant config set via ``@config`` and
@@ -127,22 +127,38 @@ class Config:
         info for the resource associated with the current request.
 
         """
+        kwargs = cls.get_resource_args(
+            app, resource, request_method, content_type, resource_method, include_defaults)
+        return cls(app, request_method, content_type, **kwargs)
+
+    @classmethod
+    def get_resource_args(cls, app, resource, request_method, content_type, resource_method=None,
+                          include_defaults=False):
+        """Get config args for resource, method, & content type.
+
+        This fetches the args for a resource, method, and content type
+        from the app registry. Those args can then be used to construct
+        a :class:`Config` instance.
+
+        By default, only args for the specified content type will be
+        included.
+
+        .. note:: This is intended primarily for internal use.
+
+        """
         resource_cls = resource.__class__
         resource_method = resource_method or request_method
         resource_method = getattr(resource_cls, resource_method)
         cls_name = fully_qualified_name(resource_cls)
         meth_name = fully_qualified_name(resource_method)
-        data = [app.get(config, (cls_name, '*/*'))]
-        if content_type != '*/*':
-            data.append(app.get(config, (cls_name, content_type)))
-        data.append(app.get(config, (meth_name, '*/*')))
-        if content_type != '*/*':
-            data.append(app.get(config, (meth_name, content_type)))
         kwargs = {}
-        for d in data:
-            if d:
-                kwargs.update(d)
-        return cls(app, request_method, content_type, **kwargs)
+        if include_defaults:
+            kwargs.update(app.get(config, (cls_name, '*/*'), default={}))
+        kwargs.update(app.get(config, (cls_name, content_type), default={}))
+        if include_defaults:
+            kwargs.update(app.get(config, (meth_name, '*/*'), default={}))
+        kwargs.update(app.get(config, (meth_name, content_type), default={}))
+        return kwargs
 
     def __setattr__(self, name, value):
         if name.startswith('_') or name in self._field_names:
