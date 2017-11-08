@@ -250,6 +250,7 @@ def main(app, request, _):
         return response
 
     info = request.resource_config
+    log.debug(info)
 
     if info.type:
         differentiator = info.type

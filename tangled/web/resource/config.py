@@ -152,3 +152,12 @@ class Config:
         else:
             raise TypeError(
                 "can't set {} on {}".format(name, self.__class__))
+
+    def __repr__(self):
+        items = []
+        for name in sorted(self.__dict__):
+            if not name.startswith('_'):
+                value = self.__dict__[name]
+                items.append('{name}={value}'.format_map(locals()))
+        items = ', '.join(items)
+        return '{self.__class__.__name__}({items}'.format_map(locals())
