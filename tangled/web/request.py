@@ -164,10 +164,6 @@ class Request(ARequest, BaseRequest):
             self.app, self.resource, self.method, self.response_content_type,
             self.resource_method)
 
-    def reset_resource_config(self):
-        if hasattr(self, 'resource_config'):
-            del self.resource_config
-
     # URL generators
 
     def make_url(self, path, query=None, fragment=None, *,
