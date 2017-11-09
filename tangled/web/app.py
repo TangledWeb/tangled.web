@@ -104,6 +104,7 @@ class Application(Registry):
             if is_representation_type:
                 self.register_representation_type(obj)
 
+        self.add_config_field('*/*', 'quality', None)
         self.add_config_field('*/*', 'type', None)
         self.add_config_field('*/*', 'status', None)
         self.add_config_field('*/*', 'location', None)
