@@ -72,7 +72,6 @@ class HTMLRepresentation(Representation):
     key = 'html'
     content_type = 'text/html'
     data_type = object
-    quality = 1.0
 
     @property
     def content(self):
