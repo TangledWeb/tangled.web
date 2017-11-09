@@ -141,16 +141,40 @@ class Request(ARequest, BaseRequest):
     def response_content_type(self):
         """Get the content type to use for the response.
 
-        The best matching type from the set of registered content types
-        will be selected. If there's no match, the default type will
-        be used instead.
+        This retrieves the content types the resource is configured to
+        handle then selects the best match for the requested content
+        type. If the resource isn't explicitly configured to handle any
+        types or of there's no best match, the default content type will
+        be used.
+
+        .. note:: This can't be safely accessed until after the resource
+                  has been found and set for this request.
 
         """
-        content_types = self.app.get_all('content_type')
-        content_type = self.accept.best_match(content_types)
-        if not content_type:
-            content_type = self.get_setting('default_content_type')
-        return content_type
+        app = self.app
+        resource = self.resource
+        method = self.method
+        resource_method = self.resource_method
+        content_types = []
+
+        for content_type, quality in app.get_all('content_type'):
+            args = (app, resource, method, content_type, resource_method)
+            config_kwargs = Config.get_resource_args(*args)
+            if config_kwargs:
+                resource_config = Config.for_resource(*args)
+                resource_quality = resource_config.quality
+                quality = resource_quality if resource_quality is not None else quality
+                content_types.append((content_type, quality))
+
+        if content_types:
+            chosen_content_type = self.accept.best_match(content_types)
+        else:
+            chosen_content_type = None
+
+        if not chosen_content_type:
+            chosen_content_type = self.get_setting('default_content_type')
+
+        return chosen_content_type
 
     @cached_property('response_content_type')
     def resource_config(self):
