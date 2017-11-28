@@ -302,6 +302,10 @@ class Application(Registry):
         handler = HandlerWrapper(exc_handler, HandlerWrapper(handler, None))
         return handler
 
+    def handle_request(self, request):
+        """Send a request through the handler chain."""
+        return self._first_handler(self, request)
+
     ## Configuration methods
 
     def include(self, obj):
@@ -724,7 +728,7 @@ class Application(Registry):
         try:
             request = self.make_request(environ)
             try:
-                response = self._first_handler(self, request)
+                response = self.handle_request(request)
             finally:
                 request.response = response
                 response = self._request_finished_handler(self, request)
