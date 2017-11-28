@@ -1,5 +1,7 @@
 from webob.exc import HTTPMethodNotAllowed
 
+from tangled.web.response import Response
+
 
 class Resource:
 
@@ -47,8 +49,34 @@ class Resource:
         urlvars = self.urlvars if urlvars is None else urlvars
         return self.request.resource_path(self, urlvars, **kwargs)
 
+    def allows_method(self, method):
+        method = getattr(self, method, None)
+        return not (
+            method is None or
+            method.__func__ is self.__class__.NOT_ALLOWED
+        )
+
+    @property
+    def allowed_methods(self):
+        methods = ('OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH')
+        allowed_methods = [m for m in methods if self.allows_method(m)]
+        return allowed_methods
+
     def NOT_ALLOWED(self):
         raise HTTPMethodNotAllowed()
+
+    def OPTIONS(self):
+        """Get resource options.
+
+        By default, this will add an ``Allow`` header to the response
+        that lists the methods implemented by the resource.
+
+        """
+        response = Response()
+        allowed_methods = self.allowed_methods
+        if allowed_methods:
+            response.allow = ', '.join(allowed_methods)
+        return response
 
     DELETE = NOT_ALLOWED
     """Delete resource.
@@ -76,15 +104,6 @@ class Resource:
     Return:
 
         - 204 no body (same headers as GET)
-
-    """
-
-    OPTIONS = NOT_ALLOWED
-    """Get resource options.
-
-    Return:
-
-        - ???
 
     """
 
