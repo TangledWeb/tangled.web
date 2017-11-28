@@ -133,3 +133,14 @@ class Resource:
             - 303 (instead of 204)
 
     """
+
+    PATCH = NOT_ALLOWED
+    """Update resource.
+
+    Return:
+
+        - 200 (body)
+        - 204 (no body)
+        - 303 (instead of 204)
+
+    """
