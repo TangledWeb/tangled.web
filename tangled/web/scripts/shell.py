@@ -19,6 +19,8 @@ class Command(ShellCommand, AppMixin):
     def get_locals(self):
         request = self.app.make_blank_request('/')
         resource = Resource(self.app, request, 'shell', {'action': 'action'})
+        request.resource = resource
+        request.resource_method = 'GET'
         self.app.mount_resource('shell', Resource, '/{action}')
         return {
             'app': self.app,
