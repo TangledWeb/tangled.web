@@ -203,6 +203,7 @@ def resource_finder(app, request, next_handler):
 # csrf handler will be inserted here if enabled
 # auth handler will be inserted here if enabled
 # non-system handlers will be inserted here
+# cors handler will be inserted here if enabled
 
 
 def timer(app, request, next_handler):

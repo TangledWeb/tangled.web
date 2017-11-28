@@ -277,6 +277,8 @@ class Application(Registry):
             handlers.append(settings['auth'])
         # Handlers added by extensions and applications
         handlers += self.get_all(abcs.AHandler, [])
+        if self.get_setting('cors.enabled'):
+            handlers.append(settings['cors'])
         # Main handler
         handlers.append(settings['main'])
         # Wrap handlers

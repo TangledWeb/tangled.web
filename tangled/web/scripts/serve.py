@@ -9,6 +9,7 @@ import traceback
 from wsgiref.simple_server import make_server
 
 from tangled.abcs import ACommand
+from tangled.decorators import cached_property
 from tangled.util import fully_qualified_name
 
 from .mixins import AppMixin
@@ -31,6 +32,20 @@ class Command(ACommand, AppMixin):
         parser.add_argument(
             '--reload-interval', type=int, default=1,
             help='How often (in seconds) to check for changed files')
+        parser.add_argument('--enable-permissive-cors', action='store_true', default=False)
+
+    @cached_property
+    def settings(self):
+        settings = super().settings
+        if self.args.enable_permissive_cors:
+            settings.update({
+                'tangled.app.cors.enabled': True,
+                'tangled.app.cors.permissive': True,
+            })
+            self.print_error(
+                'WARNING: Permissive CORS is enabled; '
+                'this is insecure and should be used only development')
+        return settings
 
     def run(self):
         if self.args.reload and not os.environ.get('MONITOR'):

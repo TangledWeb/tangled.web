@@ -12,6 +12,8 @@ def get_conversion_map():
         'debug': 'bool',
         'debug.pdb': 'bool',
         'factory': 'object',
+        'tangled.app.cors.enabled': 'bool',
+        'tangled.app.cors.permissive': 'bool',
         'tangled.app.csrf.enabled': 'bool',
         'tangled.app.error_resource': 'object',
         'tangled.app.exc_log_message_factory': 'object',
