@@ -166,6 +166,10 @@ class Application(Registry):
             self.created()
 
     def created(self):
+        # Force early loading of handlers. This is intended to shake out
+        # more errors without needing to issue a request.
+        self._handlers
+
         self.notify_subscribers(ApplicationCreated, self)
         return self
 
