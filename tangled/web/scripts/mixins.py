@@ -1,5 +1,3 @@
-import traceback
-
 from tangled.decorators import cached_property
 from tangled.util import load_object
 
@@ -38,8 +36,4 @@ class AppMixin:
         return settings
 
     def make_app(self):
-        try:
-            return self.args.app_factory(self.settings)
-        except:
-            traceback.print_exc()
-            self.exit('\nCould not load app', 1)
+        return self.args.app_factory(self.settings)
