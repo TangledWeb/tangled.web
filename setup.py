@@ -13,13 +13,13 @@ setup(
     packages=PEP420PackageFinder.find(include=['tangled*']),
     include_package_data=True,
     install_requires=[
-        'tangled>=0.1a9',
+        'tangled>=1.0a10',
         'MarkupSafe>=0.23',
         'WebOb>=1.5.1',
     ],
     extras_require={
         'dev': [
-            'tangled[dev]>=0.1a9',
+            'tangled[dev]>=1.0a10',
         ],
     },
     entry_points="""
