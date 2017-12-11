@@ -31,9 +31,6 @@ setup(
     [tangled.scaffolds]
     basic = tangled.web.scaffolds:basic
 
-    [zc.buildout]
-    wsgi_application = tangled.web.recipes:WSGIApplication
-
     """,
     classifiers=[
         'Development Status :: 3 - Alpha',
