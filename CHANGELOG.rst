@@ -1,7 +1,7 @@
-1.0a12 (unreleased)
+1.0a12 (2017-12-10)
 ===================
 
-- No changes yet
+- Fix borked 1.0a11 release.
 
 
 1.0a11 (2017-12-10)
