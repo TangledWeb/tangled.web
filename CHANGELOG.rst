@@ -1,7 +1,26 @@
-1.0a11 (unreleased)
+1.0a11 (2017-12-10)
 ===================
 
-- No changes yet
+- Removed `Request.reset_resource_config()`. It's no longer needed since
+  properties created via `@cached_property` can now always be safely deleted.
+- Changed the default for `Reprensentation.quality` to `0.5`. This makes all
+  content types equal instead of favoring HTML.
+- Added `quality` field to default resource config options. This allows
+  resources to set a preferred content type.
+- Changed how the response content type is selected: it's now selected based on
+  what the resource is configured to handle.
+- Moved first evaluation of `Application._handlers` to `Application.created()`
+  in order to shake out more errors during application startup instead of
+  waiting for the first request.
+- Added `Application.handle_request(request)`, which takes a request and passes
+  it into the handler chain. This allows for easier testing of request handling
+  and also for overriding how handling is initiated.
+- Added default implementation of `Resouce.OPTIONS()` instead of having it be
+  disallowed by default (I think `OPTIONS` should always be allowed?). It
+  returns a response with the `Allow` header set.
+- Added `Resource.PATCH()`. It's disallowed by default.
+- Added initial CORS handler. This initial version only supports development
+  use cases with a permissive setting that allows requests from any origin.
 
 
 0.1a10 (2016-01-03)
