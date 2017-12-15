@@ -54,35 +54,62 @@ def exc_handler(app, request, next_handler):
         if app.debug:
             if app.settings.get('debug.pdb', False):
                 pdb.post_mortem(exc.__traceback__)
-            return DebugHTTPInternalServerError(traceback.format_exc())
+            response = DebugHTTPInternalServerError(traceback.format_exc())
         else:
             response = HTTPInternalServerError()
+    if response.status_code < 400:
+        return response
+    main_handler = app.get_setting('handler.main')
+    main_handler = HandlerWrapper(main_handler, None)
+    return error_handler(app, request, main_handler, response)
+
+
+def error_handler(app, request, main_handler, original_response):
+    """Handle error response.
+
+    If an error resource is configured, its ``GET`` method will be
+    called to get the final response. This is accomplished by setting
+    the error resource as the resource for the request and then passing
+    the request back into the main handler.
+
+    If CORS is enabled, the main handler will be wrapped in the CORS
+    handler so that error responses will have the appropriate headers.
+
+    If no error resource is configured, the original error response will
+    be returned as is.
+
+    """
     try:
-        # TODO: Log errors for specified status codes? (e.g., 400)
-        # TODO: Pull this out and make it configurable
-        if response.status_code >= 400:
-            # Display an error page if an error resource is configured
-            error_resource = app.get_setting('error_resource')
-            if error_resource:
-                resource = error_resource(app, request)
-                request.method = 'GET'
-                request.resource = resource
-                request.resource_method = 'GET'
-                request.response = response
-                del request.response_content_type
-                del request.resource_config
-                try:
-                    return main(app, request, None)
-                except WSGIHTTPException as exc:
-                    app.log_exc(request, exc)
-                    return exc
+        error_resource = app.get_setting('error_resource')
+
+        if error_resource:
+            resource = error_resource(app, request)
+            request.method = 'GET'
+            request.resource = resource
+            request.resource_method = 'GET'
+            request.response = original_response
+
+            del request.response_content_type
+            del request.resource_config
+
+            if app.get_setting('cors.enabled'):
+                handler = app.get_setting('handler.cors')
+                handler = HandlerWrapper(handler, main_handler)
+            else:
+                handler = main_handler
+
+            try:
+                return handler(app, request)
+            except WSGIHTTPException as exc:
+                app.log_exc(request, exc)
+                return exc
     except Exception as exc:
         app.log_exc(request, exc)
 
     # If there's an exception in the error resource (or there's no error
     # resource configured), the original exception response will be
     # returned, which is better than nothing.
-    return response
+    return original_response
 
 
 def request_finished_handler(app, request, _):
