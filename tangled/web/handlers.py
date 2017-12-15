@@ -31,6 +31,8 @@ import traceback
 
 from webob.exc import WSGIHTTPException, HTTPInternalServerError
 
+from tangled.util import load_object
+
 from . import csrf
 from .abcs import AMountedResourceTree
 from .events import NewRequest, ResourceFound, NewResponse
@@ -277,6 +279,8 @@ class HandlerWrapper:
     # An internal class used for wrapping handler callables.
 
     def __init__(self, callable_, next_handler):
+        if isinstance(callable_, str):
+            callable_ = load_object(callable_)
         self.callable_ = callable_
         self.next = next_handler
 

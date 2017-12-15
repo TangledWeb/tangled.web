@@ -285,7 +285,6 @@ class Application(Registry):
         wrapped_handlers = []
         next_handler = None
         for handler in reversed(handlers):
-            handler = load_object(handler)
             handler = HandlerWrapper(handler, next_handler)
             wrapped_handlers.append(handler)
             next_handler = handler
@@ -299,10 +298,9 @@ class Application(Registry):
     @cached_property
     def _request_finished_handler(self):
         """Calls finished callbacks in exc handling context."""
-        exc_handler = load_object(self.get_setting('handler.exc'))
-        handler = load_object('.handlers:request_finished_handler')
-        handler = HandlerWrapper(exc_handler, HandlerWrapper(handler, None))
-        return handler
+        handler = HandlerWrapper('.handlers:request_finished_handler', None)
+        exc_handler = HandlerWrapper(self.get_setting('handler.exc'), handler)
+        return exc_handler
 
     def handle_request(self, request):
         """Send a request through the handler chain."""
