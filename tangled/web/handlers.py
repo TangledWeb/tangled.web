@@ -57,32 +57,34 @@ def exc_handler(app, request, next_handler):
             response = DebugHTTPInternalServerError(traceback.format_exc())
         else:
             response = HTTPInternalServerError()
-    if response.status_code < 400:
-        return response
-    main_handler = app.get_setting('handler.main')
-    main_handler = HandlerWrapper(main_handler, None)
-    return error_handler(app, request, main_handler, response)
+    return get_exc_response(app, request, response)
 
 
-def error_handler(app, request, main_handler, original_response):
-    """Handle error response.
+def get_exc_response(app, request, original_response):
+    """Get response for exception.
 
-    If an error resource is configured, its ``GET`` method will be
+    If the response's status code is 400 or greater *and* an error
+    resource is configured, the error resource's ``GET`` method will be
     called to get the final response. This is accomplished by setting
     the error resource as the resource for the request and then passing
     the request back into the main handler.
 
-    If CORS is enabled, the main handler will be wrapped in the CORS
-    handler so that error responses will have the appropriate headers.
+    When the response's status code is less than 400 *or* no error
+    resource is configured, the response will be returned as is.
 
-    If no error resource is configured, the original error response will
-    be returned as is.
+    If CORS is enabled, the appropriate CORS headers will be added by
+    calling the configured CORS handler.
 
     """
     try:
+        cors_enabled = app.get_setting('cors.enabled')
+
+        if cors_enabled:
+            cors_handler = app.get_setting('handler.cors')
+
         error_resource = app.get_setting('error_resource')
 
-        if error_resource:
+        if original_response.status_code > 400 and error_resource:
             resource = error_resource(app, request)
             request.method = 'GET'
             request.resource = resource
@@ -92,9 +94,11 @@ def error_handler(app, request, main_handler, original_response):
             del request.response_content_type
             del request.resource_config
 
-            if app.get_setting('cors.enabled'):
-                handler = app.get_setting('handler.cors')
-                handler = HandlerWrapper(handler, main_handler)
+            main_handler = app.get_setting('handler.main')
+            main_handler = HandlerWrapper(main_handler, None)
+
+            if cors_enabled:
+                handler = HandlerWrapper(cors_handler, main_handler)
             else:
                 handler = main_handler
 
@@ -103,6 +107,12 @@ def error_handler(app, request, main_handler, original_response):
             except WSGIHTTPException as exc:
                 app.log_exc(request, exc)
                 return exc
+        else:
+            if cors_enabled:
+                next_handler = lambda app, request: original_response
+                handler = HandlerWrapper(cors_handler, next_handler)
+            return handler(app, request)
+
     except Exception as exc:
         app.log_exc(request, exc)
 
