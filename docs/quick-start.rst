@@ -17,8 +17,8 @@ Python::
 
 .. note:: Python 2.x is *not* supported, and there are no plans to support it.
 
-Virtual Env
-===========
+Virtualenv
+==========
 
 Next, set up an isolated virtual environment. Since we're using Python 3, this
 is built in. The command for creating a virtual env looks like this::
@@ -32,24 +32,20 @@ https://raw.github.com/pypa/pip/master/contrib/get-pip.py
 
 Then run the following command::
 
-    ./bin/python get-pip.py
+    python get-pip.py
 
 Install Dependencies
 ====================
 
-A couple of Tangled dependencies need to be installed so that the
+The ``tangled.web`` package needs to be installed so that the
 ``tangled scaffold`` command and ``basic`` scaffold are available::
 
-    ./bin/pip install tangled.web==VERSION
+    pip install tangled.web
 
-Replace `VERSION` with the version you want to install. The current version
-is |version|.
+If you want to use the latest code, you can do this instead::
 
-If you want to use the latest code, you can do this instead (requires git to be
-installed)::
-
-    ./bin/pip install -e git+git://github.com/TangledWeb/tangled#egg=tangled
-    ./bin/pip install -e git+git://github.com/TangledWeb/tangled.web#egg=tangled.web
+    pip install -e https://github.com/TangledWeb/tangled#egg=tangled
+    pip install -e https://github.com/TangledWeb/tangled.web#egg=tangled.web
 
 Create a Basic Tangled Web App
 ==============================
@@ -58,15 +54,15 @@ Now that the virtual environment is set up and the Tangled dependencies have
 been installed, a project can be created. Run the following commands in the
 ``helloworld.venv`` directory::
 
-    ./bin/tangled scaffold basic helloworld
-    ./bin/pip install -e helloworld
+    tangled scaffold basic helloworld
+    pip install -e helloworld
 
 Serve it Up
 ===========
 
 Now that everything's installed, it's time to run the app::
 
-    ./bin/tangled serve -f helloworld/development.ini
+    tangled serve -f helloworld/development.ini
 
 Now you can visit http://localhost:6666/ and http://localhost:6666/name.
 
