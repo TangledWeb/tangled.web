@@ -6,7 +6,7 @@ setup(
     version='1.0a13.dev0',
     description='RESTful Web Framework',
     long_description=open('README.rst').read(),
-    url='http://tangledframework.org/',
+    url='https://tangledframework.org/',
     download_url='https://github.com/TangledWeb/tangled.web/tags',
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
