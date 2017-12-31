@@ -13,4 +13,4 @@ Unlike many other frameworks, there are no "views" or "controllers" here, only
 resources. Resources respond to HTTP requests and return representations based
 on the client's preference (indicated via Accept headers).
 
-`Documentation (in progress) <http://tangledframework.org/docs/tangled.web/>`_
+`Documentation (in progress) <https://tangledframework.org/docs/tangled.web/>`_
