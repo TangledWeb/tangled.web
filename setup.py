@@ -17,11 +17,6 @@ setup(
         'MarkupSafe>=0.23',
         'WebOb>=1.5.1',
     ],
-    extras_require={
-        'dev': [
-            'tangled[dev]>=1.0a12',
-        ],
-    },
     entry_points="""
     [tangled.scripts]
     serve = tangled.web.scripts.serve

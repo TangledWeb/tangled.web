@@ -1,1 +1,2 @@
--e .[dev]
+-e ../tangled[dev]
+-e .
