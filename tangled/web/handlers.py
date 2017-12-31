@@ -84,7 +84,9 @@ def get_exc_response(app, request, original_response):
 
         error_resource = app.get_setting('error_resource')
 
-        if original_response.status_code > 400 and error_resource:
+        if (original_response.status_code > 400 and
+                error_resource and
+                not isinstance(original_response, DebugHTTPInternalServerError)):
             resource = error_resource(app, request)
             request.method = 'GET'
             request.resource = resource
