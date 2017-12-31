@@ -1,6 +1,10 @@
-.PHONY = init
+venv ?= .env
 
-init:
-	test -d .env || virtualenv -p python3.5 .env
-	.env/bin/pip install runcommands
-	.env/bin/runcommand init
+init: $(venv)
+	$(venv)/bin/pip install -r requirements.txt
+	$(venv)/bin/runcommand init
+
+$(venv):
+	virtualenv -p python3 $(venv)
+
+.PHONY = init
