@@ -1,7 +1,7 @@
 Installation
 ++++++++++++
 
-.. note:: Python 3.3+ is required. Older versions of Python 3 will not work.
+.. note:: Python 3.4+ is required. Older versions of Python 3 will not work.
           No version of Python 2 will work.
 
 All ``tangled.*`` packages are standard `setuptools`_ distributions that can

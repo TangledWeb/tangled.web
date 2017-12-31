@@ -4,16 +4,14 @@ Quick Start
 This is a short guide that will show you the basics of creating a Web
 application based on ``tangled.web``.
 
-Install Python 3.3+
+Install Python 3.4+
 ===================
 
-First, install Python 3.3. Older versions of Python 3 *will not* work. Mainly,
-this is because of the use of built-in namespace package support that was
-added in Python 3.3.
+First, install Python 3.4 or newer.
 
-You can download Python 3.3
-`from here <http://www.python.org/download/releases/3.3.3/>`_. If you're using
-Mac OS, `Homebrew <http://brew.sh/>`_ is an easy way to install Python::
+You can download Python 3 `from here <https://www.python.org/downloads/>`_. If
+you're using Mac OS, `Homebrew <http://brew.sh/>`_ is an easy way to install
+Python::
 
     brew install python3
 
