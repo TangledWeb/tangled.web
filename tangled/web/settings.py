@@ -1,3 +1,5 @@
+from functools import partial
+
 from tangled.converters import as_meth_args
 from tangled.settings import parse_settings, parse_settings_file, check_required
 
@@ -37,15 +39,13 @@ def get_conversion_map(**overrides):
     return conversion_map
 
 
-def make_app_settings(settings, conversion_map={}, defaults={}, required=(),
-                      prefix=None, strip_prefix=True, parse=True, section='app',
+def make_app_settings(settings, conversion_map={}, defaults={}, required=(), section='app',
                       **extra_settings):
     """Create a properly initialized application settings dict.
 
-    In simple cases, you don't need to call this directly--you can just
-    pass a settings file name or a plain dict to
-    :class:`tangled.web.app.Application`, and this will be called for
-    you.
+    In simple cases, you don't need to call this directly--you can pass
+    a settings file name or dict to :class:`tangled.web.app.Application`
+    and this will be called for you.
 
     If you need to do custom parsing (e.g., if your app has custom
     settings), you can call this function with a conversion map,
@@ -58,39 +58,34 @@ def make_app_settings(settings, conversion_map={}, defaults={}, required=(),
         - Core tangled.web defaults are *always* added because
           :class:`tangled.web.app.Application` assumes they are always
           set.
-        - Settings parsing can be disabled by passing ``parse=False``.
-          This only applies to *your* settings, including defaults and
-          extra settings (*core* defaults are always parsed).
+        - Additional defaults can be passed; these will override the
+          corresponding tangled.web defaults.
         - Extra settings can be passed as keyword args; they will
-          override all other settings, and they will be parsed (or not)
-          along with other settings.
+          override all other settings, and they will be parsed along
+          with other settings.
         - Required settings are checked for after all the settings are
           merged.
 
-    In really special cases you can create a subclass of
-    :class:`.AAppSettings` and then construct your settings dict by
-    hand (eschewing the use of this function).
+    In really special cases you can create an instance of
+    :class:`.AAppSettings` and then construct your settings dict
+    manually.
 
     """
-    app_settings = parse_settings_file(
-        'tangled.web:defaults.ini', conversion_map=get_conversion_map(),
-        meta_settings=False)
+    conversion_map = get_conversion_map(**conversion_map)
+    parse = partial(parse_settings, conversion_map=conversion_map)
+    parse_file = partial(parse_settings_file, conversion_map=conversion_map)
+
+    all_settings = parse_file('tangled.web:defaults.ini', meta_settings=False)
+    all_settings.update(parse(defaults))
     if isinstance(settings, str):
-        settings = parse_settings_file(settings, section=section)
-    settings.update(extra_settings)
-    if parse:
-        _conversion_map = get_conversion_map()
-        _conversion_map.update(conversion_map)
-        settings = parse_settings(
-            settings, conversion_map=_conversion_map, defaults=defaults,
-            prefix=prefix, strip_prefix=strip_prefix)
+        all_settings.update(parse_file(settings, section=section))
     else:
-        app_settings.update(defaults)
-    app_settings.update(settings)
-    check_required(app_settings, required)
-    return AppSettings(app_settings)
+        all_settings.update(parse(settings))
+    all_settings.update(parse(extra_settings))
+
+    check_required(all_settings, required)
+    return AppSettings(all_settings)
 
 
 AppSettings = type('AppSettings', (dict,), {})
 AAppSettings.register(AppSettings)
-
