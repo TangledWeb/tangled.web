@@ -4,11 +4,11 @@ from tangled.settings import parse_settings, parse_settings_file, check_required
 from .abcs import AAppSettings
 
 
-def get_conversion_map():
+def get_conversion_map(**overrides):
     # Map of setting `key` => `converter`; `converter` can be any callable
     # that takes a single argument and returns a value. `converter` can also
     # be a string naming a builtin or converter from `tangled.converters`.
-    return {
+    conversion_map = {
         'debug': 'bool',
         'debug.pdb': 'bool',
         'factory': 'object',
@@ -33,6 +33,8 @@ def get_conversion_map():
             as_meth_args('tangled.web:Application.mount_static_directory'),
         'tangled.app.tunnel_over_post': 'tuple',
     }
+    conversion_map.update(overrides)
+    return conversion_map
 
 
 def make_app_settings(settings, conversion_map={}, defaults={}, required=(),
