@@ -20,7 +20,6 @@ setup(
     entry_points="""
     [tangled.scripts]
     serve = tangled.web.scripts.serve
-    shell = tangled.web.scripts.shell
     show = tangled.web.scripts.show
 
     [tangled.scaffolds]
