@@ -24,6 +24,7 @@ STATUS_MAP = {
         'OPTIONS': 200,
         'POST': 303,
         'PUT': 303,
+        'PATCH': 303,
     },
     'application/json': {
         'DELETE': 204,   # No content
@@ -32,6 +33,7 @@ STATUS_MAP = {
         'OPTIONS': 200,
         'POST': 201,     # Created
         'PUT': 204,
+        'PATCH': 200,
     }
 }
 
