@@ -24,7 +24,7 @@ class Tests(unittest.TestCase):
         self.assertTrue(hasattr(app, 'settings'))
 
     def test_create_with_settings_file(self):
-        app = self.make_app('tangled.web.tests:test.ini', n=3, x='x')
+        app = self.make_app('tangled.web.tests:test.ini', extra=dict(n=3, x='x'))
         self.assertIsInstance(app, Application)
         self.assertTrue(hasattr(app, 'settings'))
         self.assertIn('b', app.settings)
@@ -41,14 +41,14 @@ class Tests(unittest.TestCase):
 
     def test_create_with_include(self):
         settings = {
-            'tangled.app.includes': 'tangled.web.tests.test_app:include'
+            'tangled.app.includes': ['tangled.web.tests.test_app:include'],
         }
         with self.assertRaisesRegex(AttributeError, 'non_existent_attribute'):
             self.make_app(settings)
 
     def test_ApplicationCreated_event_fires(self):
         settings = {
-            'tangled.app.on_created': 'tangled.web.tests.test_app:on_created',
+            'tangled.app.on_created': ['tangled.web.tests.test_app:on_created'],
         }
         self.assertRaisesRegex(
             AttributeError, 'non_existent_attribute', self.make_app, settings)

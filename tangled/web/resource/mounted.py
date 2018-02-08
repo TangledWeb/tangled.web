@@ -1,9 +1,9 @@
+import builtins
 import logging
 import re
 from collections import namedtuple, OrderedDict
 from functools import lru_cache
 
-from tangled.converters import get_converter, as_tuple
 from tangled.util import load_object
 
 from ..abcs import AMountedResourceTree
@@ -171,8 +171,8 @@ class MountedResource:
         self.name = name
         self.factory = factory
         self.path = path  # normalized path
-        self.methods = set(as_tuple(methods, sep=','))
         self.method_name = method_name
+        self.methods = set(methods)
         self.add_slash = add_slash
 
         urlvars_info = {}
@@ -194,7 +194,10 @@ class MountedResource:
                 if ':' in converter:
                     converter = load_object(converter)
                 else:
-                    converter = get_converter(converter)
+                    try:
+                        converter = getattr(builtins, converter)
+                    except AttributeError:
+                        raise TypeError('Unknown converter: %s' % converter)
             else:
                 converter = str
 

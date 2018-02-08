@@ -35,7 +35,7 @@ class AppCommand(Command):
 
     def make_settings(self, settings_file, settings):
         if settings_file:
-            return make_app_settings(settings_file, extra_settings=settings)
+            return make_app_settings(settings_file, extra=settings)
         return make_app_settings(settings)
 
 

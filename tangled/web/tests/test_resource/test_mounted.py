@@ -102,12 +102,12 @@ class TestMountedResourceTree(unittest.TestCase):
         tree.add(MountedResource('home', None, '/'))
         tree.add(MountedResource('a', None, '/a'))
         tree.add(MountedResource('b', None, '/b/'))
-        tree.add(MountedResource('xyz', None, '/x/<y>/z', methods='GET'))
+        tree.add(MountedResource('xyz', None, '/x/<y>/z', methods=['GET']))
         tree.add(MountedResource('xkz', None, '/x/k/z'))
-        tree.add(MountedResource('y_get', None, '/y', methods='GET'))
-        tree.add(MountedResource('y_post', None, '/y', methods='POST'))
+        tree.add(MountedResource('y_get', None, '/y', methods=['GET']))
+        tree.add(MountedResource('y_post', None, '/y', methods=['POST']))
         tree.add(MountedResource('cached', None, '/cached'))
-        tree.add(MountedResource('catch-all', None, '/<x>', methods='GET'))
+        tree.add(MountedResource('catch-all', None, '/<x>', methods=['GET']))
         self.tree = tree
 
     def test_find_home(self):

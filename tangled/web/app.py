@@ -7,7 +7,6 @@ import re
 from webob.exc import HTTPInternalServerError
 
 import tangled.decorators
-from tangled.converters import as_tuple
 from tangled.decorators import cached_property, fire_actions
 from tangled.registry import ARegistry, process_registry
 from tangled.util import (
@@ -69,8 +68,7 @@ class Application(Registry):
     :func:`tangled.web.settings.make_app_settings`).
 
     Extra settings can be passed as keyword args. These settings will
-    override *all* other settings. They will be parsed along with other
-    settings.
+    override *all* other settings.
 
     NOTE: If ``settings`` is an :class:`.AppSettings` instance,
     extra settings passed here will be ignored; pass them to the
@@ -149,8 +147,11 @@ class Application(Registry):
             self.load_config(where)
 
         request_factory = self.get_setting('request_factory')
+        request_factory = load_object(request_factory)
         self.register(abcs.ARequest, request_factory)
+
         response_factory = self.get_setting('response_factory')
+        response_factory = load_object(response_factory)
         self.register(abcs.AResponse, response_factory)
 
         # TODO: Not sure this belongs here
@@ -228,7 +229,9 @@ class Application(Registry):
 
     @cached_property
     def exc_log_message_factory(self):
-        return self.get_setting('exc_log_message_factory')
+        factory = self.get_setting('exc_log_message_factory')
+        factory = load_object(factory)
+        return factory
 
     def get_setting(self, key, default=NOT_SET):
         """Get a setting; return ``default`` *if* one is passed.
@@ -467,7 +470,6 @@ class Application(Registry):
         """
         if methods == '*':
             methods = ALL_HTTP_METHODS
-        methods = as_tuple(methods, sep=',')
         arg = type_(methods, content_type, name, default, required)
         for method in methods:
             differentiator = (method, content_type)
