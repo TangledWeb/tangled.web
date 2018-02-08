@@ -15,8 +15,6 @@ from .exc import ConfigurationError
 log = logging.getLogger(__name__)
 
 
-KEY = '_csrf_token'
-HEADER = 'X-CSRFToken'
 TOKEN_LENGTH = 32
 
 
@@ -34,12 +32,23 @@ def include(app):
             raise ConfigurationError('CSRF protection requires sessions')
 
 
+def get_token(request):
+    """Get CSRF session/POST token name."""
+    return request.app.settings['tangled.app.csrf.token']
+
+
+def get_header(request):
+    """Get CSRF header name."""
+    return request.app.settings['tangled.app.csrf.header']
+
+
 @property
 def csrf_token(request):
-    if KEY not in request.session:
-        request.session[KEY] = random_string(TOKEN_LENGTH)
+    token = get_token(request)
+    if token not in request.session:
+        request.session[token] = random_string(TOKEN_LENGTH)
         request.session.save()
-    return request.session[KEY]
+    return request.session[token]
 
 
 @property
@@ -67,20 +76,25 @@ def unmask_csrf_token(request, masked_token):
 
 
 def expire_csrf_token(request):
-    if KEY in request.session:
-        token = request.session.pop(KEY)
+    token = get_token(request)
+    if token in request.session:
+        token = request.session.pop(token)
         request.session.save()
         log.debug('CSRF: expired token {}'.format(token))
 
 
 @property
 def csrf_tag(request):
+    token = get_token(request)
     tag = '<input type="hidden" name="{name}" value="{value}" />'
-    tag = tag.format(name=KEY, value=request.masked_csrf_token)
+    tag = tag.format(name=token, value=request.masked_csrf_token)
     return Markup(tag)
 
 
 def csrf_handler(app, request, next_handler):
+    token = get_token(request)
+    header = get_header(request)
+
     if request.method not in SAFE_HTTP_METHODS:
         if request.resource_config.csrf_exempt:
             log.debug('CSRF: exempt: {}'.format(request.url))
@@ -93,13 +107,13 @@ def csrf_handler(app, request, next_handler):
                         'origins differ: got {}; expected {}'
                         .format(request.referer, request.url))
 
-            if KEY in request.session:
-                expected_token = request.session[KEY]
+            if token in request.session:
+                expected_token = request.session[token]
             else:
                 _forbid('token not present in session')
 
-            if KEY in request.cookies:
-                cookie_token = request.unmask_csrf_token(request.cookies[KEY])
+            if token in request.cookies:
+                cookie_token = request.unmask_csrf_token(request.cookies[token])
                 if not constant_time_compare(cookie_token, expected_token):
                     _forbid(
                         'cookie token mismatch: got {}; expected {}'
@@ -107,16 +121,16 @@ def csrf_handler(app, request, next_handler):
             else:
                 _forbid('token not present in cookies')
 
-            if KEY in request.POST:
-                post_token = request.unmask_csrf_token(request.POST[KEY])
+            if token in request.POST:
+                post_token = request.unmask_csrf_token(request.POST[token])
                 if not constant_time_compare(post_token, expected_token):
                     _forbid(
                         'POST token mismatch: got {}; expected {}'
                         .format(post_token, expected_token))
-                del request.POST[KEY]
-            elif HEADER in request.headers:
+                del request.POST[token]
+            elif header in request.headers:
                 token = request.unmask_csrf_token(
-                    request.headers[HEADER])
+                    request.headers[header])
                 if not constant_time_compare(token, expected_token):
                     _forbid(
                         'header token mismatch: got {}; expected {}'
@@ -131,7 +145,7 @@ def csrf_handler(app, request, next_handler):
     if request.method in ('GET', 'HEAD'):
         one_year_from_now = datetime.utcnow() + timedelta(days=365)
         token = request.masked_csrf_token
-        response.set_cookie(KEY, token, expires=one_year_from_now)
+        response.set_cookie(token, token, expires=one_year_from_now)
         log.debug('CSRF: cookie set')
 
     return response

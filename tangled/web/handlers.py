@@ -173,8 +173,10 @@ def tweaker(app, request, next_handler):
         if method == 'DELETE':
             # Changing request.method to DELETE makes request.POST
             # inaccessible.
-            if csrf.KEY in request.POST and csrf.HEADER not in request.headers:
-                request.headers[csrf.HEADER] = request.POST[csrf.KEY]
+            token = csrf.get_token(request)
+            header = csrf.get_header(request)
+            if token in request.POST and header not in request.headers:
+                request.headers[header] = request.POST[token]
 
         if request.method == 'POST' and method in tunneled_methods:
             request.method = method
