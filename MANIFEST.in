@@ -1,6 +1,5 @@
 include CHANGELOG
 include LICENSE
-include shell.ini
 include tangled/web/defaults.ini
 recursive-include examples *.py *.ini
 recursive-include tangled/web/scaffolds/* README *.py *.ini
