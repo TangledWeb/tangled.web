@@ -26,6 +26,7 @@ a response).
 import logging
 import os
 import pdb
+import sys
 import time
 import traceback
 
@@ -33,8 +34,8 @@ from webob.exc import WSGIHTTPException, HTTPInternalServerError
 
 from tangled.util import load_object
 
-from . import csrf
 from .abcs import AMountedResourceTree
+from . import abcs, csrf
 from .events import NewRequest, ResourceFound, NewResponse
 from .exc import DebugHTTPInternalServerError
 from .representations import Representation
@@ -77,6 +78,28 @@ def get_exc_response(app, request, original_response):
 
     """
     try:
+        # TODO: Move this?
+        if original_response.status_code == 404 and app.debug and not app.testing:
+            out = ['"{request.path}" not found; searched:\n\n'.format_map(locals())]
+            mounted_resources = app.get_all(abcs.AMountedResource, as_dict=True)
+
+            if mounted_resources:
+                def append_entry(name, methods, method, path, *, placeholder='',
+                                 longest=len(max('NAME', *mounted_resources, key=len))):
+                    methods = ', '.join(sorted(methods))
+                    method = ' ({method})'.format_map(locals()) if method else ''
+                    out.append('    {name:<{longest}} => {methods}{method}\n'.format_map(locals()))
+                    out.append('    {placeholder:<{longest}}    {path}\n'.format_map(locals()))
+
+                append_entry('NAME', ['METHODS'], None, '/PATH')
+
+                for mounted in mounted_resources.values():
+                    append_entry(mounted.name, mounted.methods, mounted.method, mounted.path)
+            else:
+                out.append('    No resources mounted\n')
+
+            print(''.join(out), file=sys.stderr)
+
         cors_enabled = app.get_setting('cors.enabled')
 
         if cors_enabled:
