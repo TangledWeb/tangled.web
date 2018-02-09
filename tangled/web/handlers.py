@@ -109,10 +109,9 @@ def get_exc_response(app, request, original_response):
             except WSGIHTTPException as exc:
                 app.log_exc(request, exc)
                 return exc
-        else:
-            if cors_enabled:
-                next_handler = lambda app, request: original_response
-                handler = HandlerWrapper(cors_handler, next_handler)
+        elif cors_enabled:
+            next_handler = lambda app, request: original_response
+            handler = HandlerWrapper(cors_handler, next_handler)
             return handler(app, request)
 
     except Exception as exc:
