@@ -154,7 +154,8 @@ class Application(Registry):
         self.register(abcs.AResponse, response_factory)
 
         # TODO: Not sure this belongs here
-        self._configure_logging()
+        if not self.testing:
+            self._configure_logging()
 
         self.name = self.get_setting('name') or 'id={}'.format(id(self))
         process_registry.register(abcs.AApplication, self, self.name)
@@ -213,6 +214,17 @@ class Application(Registry):
     def debug(self):
         """Wraps ``self.settings['debug'] merely for convenience."""
         return self.settings['debug']
+
+    @cached_property
+    def testing(self):
+        """Wraps ``self.settings['tangled.app.testing']`` for convenience.
+
+        Indicates whether the app is in testing mode, which can be used
+        to enable or disable functionality as appropriate (e.g., to turn
+        off logging when running tests).
+
+        """
+        return self.settings['tangled.app.testing']
 
     @cached_property
     def exc_log_message_factory(self):
