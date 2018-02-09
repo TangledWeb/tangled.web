@@ -1,5 +1,4 @@
 import datetime
-import html
 import json
 from abc import ABCMeta, abstractmethod
 from collections import Mapping
@@ -75,7 +74,7 @@ class HTMLRepresentation(Representation):
 
     @property
     def content(self):
-        return html.escape(str(self.data))
+        return str(self.data)
 
 
 class JSONRepresentation(Representation):
