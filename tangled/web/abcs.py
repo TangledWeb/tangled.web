@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 
 class AApplication(metaclass=ABCMeta):
@@ -36,17 +36,3 @@ class AResponse(metaclass=ABCMeta):
 class AMountedResource(metaclass=ABCMeta):
 
     """Just a marker for now."""
-
-
-class AMountedResourceTree(metaclass=ABCMeta):
-
-    @abstractmethod
-    def add(self, mounted_resource):
-        raise NotImplementedError
-
-    @abstractmethod
-    def find(self, method, path):
-        raise NotImplementedError
-
-    def find_for_request(self, request):
-        return self.find(request.method, request.path_info)

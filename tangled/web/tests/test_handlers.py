@@ -2,14 +2,10 @@ import unittest
 
 from webob.exc import HTTPNotFound, HTTPMethodNotAllowed, _HTTPMove
 
-from tangled.web import Application
-from tangled.web import handlers
+from tangled.web import handlers, Application, Resource
 
 
-class TestResource:
-
-    def __init__(self, app, request, name, urlvars):
-        pass
+class TestResource(Resource):
 
     def GET(self):
         pass
@@ -55,8 +51,7 @@ class TestResourceFinder(unittest.TestCase):
         self.assertEqual(cm.exception.location, 'http://localhost/slash/')
 
     def test_custom_method_name(self):
-        self.app.mount_resource(
-            'my_method', TestResource, '/my_method', method_name='my_method')
+        self.app.mount_resource('my_method', TestResource, '/my_method', method='my_method')
         request = self.app.make_blank_request('/my_method')
         handlers.resource_finder(self.app, request, lambda a, r: None)
         self.assertTrue(hasattr(request, 'resource'))

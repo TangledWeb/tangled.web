@@ -34,12 +34,12 @@ from webob.exc import WSGIHTTPException, HTTPInternalServerError
 
 from tangled.util import load_object
 
-from .abcs import AMountedResourceTree
 from . import abcs, csrf
 from .events import NewRequest, ResourceFound, NewResponse
 from .exc import DebugHTTPInternalServerError
 from .representations import Representation
 from .response import Response
+from .resource.exc import BindError
 
 
 log = logging.getLogger(__name__)
@@ -115,6 +115,7 @@ def get_exc_response(app, request, original_response):
             request.resource = resource
             request.resource_method = 'GET'
             request.response = original_response
+            request.resource_args = None
 
             del request.response_content_type
             del request.resource_config
@@ -231,37 +232,44 @@ def notifier(app, request, next_handler):
 def resource_finder(app, request, next_handler):
     """Find resource for request.
 
-    Sets ``request.resource`` and notifies :class:`ResourceFound`
-    subscribers.
-
-    If a resource isn't found, a 404 response is immediatley returned.
+    If a resource isn't found, a 404 response is immediately returned.
     If a resource is found but doesn't respond to the request's method,
     a ``405 Method Not Allowed`` response is returned.
 
+    Sets ``request.resource`` and ``request.resource_method``. Notifies
+    :class:`ResourceFound` subscribers.
+
     """
-    tree = app.get_required(AMountedResourceTree)
-    match = tree.find_for_request(request)
+    match = app.find_mounted_resource(request.method, request.path)
 
     if match is None:
-        request.abort(404)
-
-    mounted_resource = match.mounted_resource
-    urlvars = match.urlvars
-
-    if mounted_resource.add_slash and not request.path_info.endswith('/'):
-        request.path_info += '/'
-        request.abort(303, location=request.url)
-
-    resource = mounted_resource.factory(
-        app, request, mounted_resource.name, urlvars)
-    method_name = mounted_resource.method_name or request.method
-
-    if not hasattr(resource, method_name):
+        match = app.find_mounted_resource(request.method, request.path, ignore_method=True)
+        if match is None:
+            # No resources mounted at path
+            request.abort(404)
+        # One or more resources mounted at path but none respond to
+        # request method
         request.abort(405)
 
+    mounted_resource, request.urlvars = match
+
+    if mounted_resource.add_slash and not request.path_info.endswith('/'):
+        request.path_info = '{request.path_info}/'.format_map(locals())
+        request.abort(303, location=request.url)
+
+    resource = mounted_resource.factory(app, request, mounted_resource.name)
+    method = mounted_resource.method or request.method
+
+    try:
+        resource_args = resource.bind(request, method)
+    except BindError as exc:
+        request.abort(400, str(exc))
+
     request.resource = resource
-    request.resource_method = method_name
-    app.notify_subscribers(ResourceFound, app, request, mounted_resource)
+    request.resource_method = method
+    request.resource_args = resource_args
+
+    app.notify_subscribers(ResourceFound, app, request, resource, method, resource_args)
     return next_handler(app, request)
 
 
@@ -306,7 +314,14 @@ def main(app, request, _):
 
     """
     method = getattr(request.resource, request.resource_method)
-    data = method()
+    resource_args = getattr(request, 'resource_args', None)
+
+    if resource_args is None:
+        data = method()
+    else:
+        args = request.resource_args.args
+        kwargs = request.resource_args.kwargs
+        data = method(*args, **kwargs)
 
     if isinstance(data, Response):
         return data

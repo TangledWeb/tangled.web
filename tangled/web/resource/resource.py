@@ -1,6 +1,14 @@
+from inspect import ismethod, signature, Parameter
+from urllib.parse import unquote, unquote_plus
+
 from webob.exc import HTTPMethodNotAllowed
 
+from tangled.decorators import cached_property
+from tangled.util import as_bool
+from tangled.web import csrf
 from tangled.web.response import Response
+
+from .exc import BindError
 
 
 class Resource:
@@ -23,43 +31,109 @@ class Resource:
 
     """
 
-    def __init__(self, app, request, name=None, urlvars=None):
+    empty = Parameter.empty
+
+    def __init__(self, app, request, name=None):
         self.app = app
         self.request = request
         self.name = name
-        self.urlvars = urlvars
 
-    def url(self, urlvars=None, **kwargs):
+    def bind(self, request, method):
+        """Bind the request to this resource.
+
+        Inspired by :meth:`inspect.Signature.bind` in the standard library,
+        this extracts URL vars, GET parameters, POST data, and JSON data and
+        "binds" them to the request's resource method.
+
+        Sets ``request.resource_args``, which has ``args`` and ``kwargs``
+        attributes corresponding the resource method's positional and
+        keyword arguments (it's an instance of
+        :class:`inspect.BoundArguments`).
+
+        """
+        def add_args_from(data, source, *, exclude=(), decoder=None):
+            added_args = {}
+            for n, v in data.items():
+                if n in exclude:
+                    continue
+                if n in args:
+                    messages.append('{name} duplicated in {source} args'.format_map(locals()))
+                else:
+                    if decoder:
+                        v = decoder(v)
+                    args[n] = v
+
+        args = {}
+        messages = []
+
+        add_args_from(request.urlvars, 'URL', decoder=unquote)
+        add_args_from(request.GET, 'GET', decoder=unquote_plus)
+        if request.content_type == 'application/json':
+            add_args_from(request.json, 'JSON')
+        add_args_from(
+            request.POST, 'POST', exclude=[csrf.get_token(request)],
+            decoder=unquote)
+
+        if messages:
+            raise BindError(self, request, method, ', '.join(messages))
+
+        method = getattr(self, method)
+        method_signature = signature(method)
+        parameters = method_signature.parameters
+
+        try:
+            bound_args = method_signature.bind(**args)
+        except TypeError as exc:
+            raise BindError(self, request, method, exc)
+
+        for name, value in bound_args.arguments.items():
+            parameter = parameters[name]
+            kind = parameter.annotation
+            if kind is parameter.empty:
+                default = parameter.default
+                if default is parameter.empty or default is None:
+                    kind = str
+                else:
+                    kind = default.__class__
+            if kind is bool:
+                kind = as_bool
+            try:
+                value = kind(value)
+            except ValueError as exc:
+                raise BindError(self, request, method, exc)
+            bound_args.arguments[name] = value
+
+        return bound_args
+
+    def url(self, urlvars, **kwargs):
         """Generate a fully qualified URL for this resource.
 
         You can pass ``urlvars``, ``query``, and/or ``fragment`` to
         generate a URL based on this resource.
 
         """
-        urlvars = self.urlvars if urlvars is None else urlvars
         return self.request.resource_url(self, urlvars, **kwargs)
 
-    def path(self, urlvars=None, **kwargs):
+    def path(self, urlvars, **kwargs):
         """Generate an application-relative URL path for this resource.
 
         You can pass ``urlvars``, ``query``, and/or ``fragment`` to
         generate a path based on this resource.
 
         """
-        urlvars = self.urlvars if urlvars is None else urlvars
         return self.request.resource_path(self, urlvars, **kwargs)
 
     def allows_method(self, method):
         method = getattr(self, method, None)
-        return not (
-            method is None or
-            method.__func__ is self.__class__.NOT_ALLOWED
-        )
+        return ismethod(method) and method.__func__ is not self.__class__.NOT_ALLOWED
 
-    @property
+    @cached_property
     def allowed_methods(self):
-        methods = ('OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH')
-        allowed_methods = [m for m in methods if self.allows_method(m)]
+        candidates = (
+            name for name in dir(self)
+            if not name.startswith('_') and name.isupper() and ismethod(getattr(self, name))
+        )
+        allowed_methods = tuple(name for name in candidates if self.allows_method(name))
         return allowed_methods
 
     def NOT_ALLOWED(self):

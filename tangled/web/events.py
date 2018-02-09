@@ -72,14 +72,16 @@ class ResourceFound:
 
     """Emitted when the resource is found for a request.
 
-    Attributes: ``app``, ``request``, ``resource``.
+    Attributes: ``app``, ``request``, ``resource``, ``method``, ``args``
 
     """
 
-    def __init__(self, app, request, resource):
+    def __init__(self, app, request, resource, method, args):
         self.app = app
         self.request = request
         self.resource = resource
+        self.method = method
+        self.args = args
 
 
 class NewResponse:

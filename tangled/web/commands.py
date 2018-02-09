@@ -51,7 +51,7 @@ class Shell(AppCommand):
         app = self.make_app(app_factory, settings_file, settings)
 
         request = app.make_blank_request('/')
-        resource = Resource(app, request, 'shell', {'action': 'action'})
+        resource = Resource(app, request, 'shell')
         request.resource = resource
         request.resource_method = 'GET'
         app.mount_resource('shell', Resource, '/{action}')

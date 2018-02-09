@@ -1,4 +1,5 @@
 import configparser
+import functools
 import logging
 import logging.config
 import pdb
@@ -23,7 +24,7 @@ from .exc import DebugHTTPInternalServerError
 from .handlers import HandlerWrapper
 from .representations import Representation
 from .resource.config import Field as ConfigField, RepresentationArg
-from .resource.mounted import MountedResourceTree, MountedResource
+from .resource.mounted import MountedResource, MountedResourceMatch
 from .settings import make_app_settings
 from .static import LocalDirectory, RemoteDirectory
 
@@ -89,8 +90,6 @@ class Application(Registry):
         self.settings = settings
 
         package = settings.get('package')
-
-        self.register(abcs.AMountedResourceTree, MountedResourceTree())
 
         # Register default representations (content type => repr. type).
         # Includes can override this.
@@ -478,16 +477,21 @@ class Application(Registry):
             registry = self.get(type_, differentiator)
             registry.register(type_, arg, name)
 
-    def mount_resource(self, name, factory, path, methods=(), method_name=None,
-                       add_slash=False, _level=3):
+    def mount_resource(self, name, factory, path, methods=(), method=None, add_slash=False,
+                       replace=False, _level=3):
         """Mount a resource at the specified path.
+
+        Resources mounted later will take precedence over resources
+        mounted earlier.
 
         Basic example::
 
             app.mount_resource('home', 'mypackage.resources:Home', '/')
 
-        Specifying URL vars::
+        URL vars are delimited with angle brackets like so::
 
+            # The user's ID will be extracted from the URL and passed to
+            # the User resource's methods.
             app.mount_resource(
                 'user', 'mypackage.resources:User', '/user/<id>')
 
@@ -495,15 +499,21 @@ class Application(Registry):
         This can be *any* string. It's used when generating resource
         URLs via :meth:`.request.Request.resource_url`.
 
-        A ``factory`` must also be specified. This can be any class or
-        function that produces objects that implement the resource
-        interface (typically a subclass of
-        :class:`.resource.resource.Resource`). The factory may be passed
-        as a string with the following format:
-        ``package.module:factory``.
+        Pass ``replace=True`` to replace a resource mounted with a given
+        name with a different resource (possibly mounted at a different
+        path and/or with different methods).
 
-        The ``path`` is an application relative path that may or may not
-        include URL vars.
+        ``factory`` is a class or other callable that produces objects
+        that implement the resource interface (typically a subclass of
+        :class:`.resource.resource.Resource`). The factory may be passed
+        as an object path like ``'package.module:factory'``.
+
+        ``path`` is an application-relative path that may or may not
+        include URL vars. It *must* begin with a slash.
+
+        If ``path`` ends with a slash or ``add_slash=True``, requests to
+        ``path`` without a trailing slash will be redirected to ``path``
+        with a slash appended.
 
         A list of HTTP ``methods`` can be passed to constrain which
         methods the resource will respond to. By default, it's assumed
@@ -514,27 +524,6 @@ class Application(Registry):
         allowed methods here; this is mainly useful if you want to
         mount different resources at the same path for different
         methods.
-
-        If ``path`` ends with a slash or ``add_slash`` is True, requests
-        to ``path`` without a trailing slash will be redirected to the
-        ``path`` with a slash appended.
-
-        About URL vars:
-
-        The format of a URL var is ``<(converter)identifier:regex>``.
-        Angle brackets delimit URL vars. Only the ``identifier`` is
-        required; it can be any valid Python identifier.
-
-        If a ``converter`` is specified, it can be a built-in name,
-        the name of a converter in :mod:`tangled.util.converters`, or
-        a ``package.module:callable`` path that points to a callable
-        that accepts a single argument. URL vars found in a request path
-        will be converted automatically.
-
-        The ``regex`` can be *almost* any regular expression. The
-        exception is that ``<`` and ``>`` can't be used. In practice,
-        this means that named groups (``(?P<name>regex)``) can't be used
-        (which would be pointless anyway), nor can "look behinds".
 
         **Mounting Subresources**
 
@@ -552,25 +541,29 @@ class Application(Registry):
         with its parent's name plus a slash, and its ``path`` will be
         prepended with its parent's path plus a slash. If no ``factory``
         is specified, the parent's factory will be used. ``methods``
-        will be propagated as well. ``method_name`` and ``add_slash``
-        are *not* propagated.
+        will be propagated as well. ``method`` and ``add_slash`` are
+        *not* propagated.
 
         In the examples above, the child's name would be
         ``parent/child`` and its path would be ``/parent/child``.
 
         """
-        mounted_resource = MountedResource(
-            name,
-            load_object(factory, level=_level),
-            path,
-            methods=methods,
-            method_name=method_name,
-            add_slash=add_slash)
-        self.register(
-            abcs.AMountedResource, mounted_resource, mounted_resource.name)
-        tree = self.get_required(abcs.AMountedResourceTree)
-        tree.add(mounted_resource)
+        factory = load_object(factory, level=_level)
+        mounted_resource = MountedResource(self, name, factory, path, methods, method, add_slash)
+        self.register(abcs.AMountedResource, mounted_resource, mounted_resource.name, replace)
         return SubResourceMounter(self, mounted_resource)
+
+    @functools.lru_cache()
+    def find_mounted_resource(self, method, path, *, ignore_method=False):
+        """Find resource mounted at path corresponding to method."""
+        candidates = self.get_all(abcs.AMountedResource, as_dict=True)
+        if not candidates:
+            log.warning('No resources mounted')
+            return None
+        for mounted_resource in reversed(candidates.values()):
+            match = mounted_resource.path_regex.search(path)
+            if match and (method in mounted_resource.methods or ignore_method):
+                return MountedResourceMatch(mounted_resource, match.groupdict())
 
     def register_representation_type(self, representation_type, replace=False):
         """Register a content type.
@@ -780,11 +773,9 @@ class SubResourceMounter:
     def __exit__(self, exc_type, exc_val, exc_traceback):
         return False
 
-    def mount(self, name, path, factory=None, methods=None, method_name=None,
-              add_slash=False):
+    def mount(self, name, path, factory=None, methods=None, method=None, add_slash=False):
         name = '/'.join((self.parent.name, name))
         path = '/'.join((self.parent.path, path.lstrip('/')))
         factory = factory if factory is not None else self.parent.factory
         methods = methods if methods is not None else self.parent.methods
-        return self.app.mount_resource(
-            name, factory, path, methods, method_name, add_slash, _level=4)
+        return self.app.mount_resource(name, factory, path, methods, method, add_slash, _level=4)
