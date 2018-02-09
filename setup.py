@@ -16,6 +16,7 @@ setup(
         'tangled>=1.0a12',
         'MarkupSafe>=0.23',
         'WebOb>=1.5.1',
+        'WebTest>=2.0.29',
     ],
     entry_points="""
     [tangled.scripts]
