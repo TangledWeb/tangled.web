@@ -32,7 +32,7 @@ STATUS_MAP = {
         'HEAD': 204,
         'OPTIONS': 200,
         'POST': 201,     # Created
-        'PUT': 204,
+        'PUT': 200,
         'PATCH': 200,
     }
 }
