@@ -176,4 +176,4 @@ class Config:
                 value = self.__dict__[name]
                 items.append('{name}={value}'.format_map(locals()))
         items = ', '.join(items)
-        return '{self.__class__.__name__}({items}'.format_map(locals())
+        return '{self.__class__.__name__}({items})'.format_map(locals())
